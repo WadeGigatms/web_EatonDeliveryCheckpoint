@@ -1,0 +1,268 @@
+/* Provide sufficient contrast against white background */
+a {
+    color: #0366d6;
+}
+
+code {
+    color: #E01A76;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* layout */
+.vh-5 {
+    height: 5vh;
+}
+
+.vh-10 {
+    height: 10vh;
+}
+
+.vh-90 {
+    height: 90vh;
+}
+
+.vh-100 {
+    height: 100vh;
+}
+
+.h-3 {
+    height: 32.8% !important;
+}
+
+.h-5 {
+    height: 19.3% !important;
+}
+
+.p-025 {
+    padding: 0.25% !important;
+}
+
+.bg-eaton-b {
+    background-color: #0067c6;
+}
+
+.circle-size {
+    font-size: 24px;
+}
+
+.btn-app {
+    margin: 0rem !important;
+    padding: 0.2rem !important;
+    background-color: #0067c6 !important;
+    border: 0rem !important;
+    color: white !important;
+}
+
+    .btn-app:hover {
+        border: 1px solid white !important;
+    }
+
+.btn-app-active {
+    background-color: white !important;
+    color: black !important;
+}
+
+.footer {
+    margin: 0px !important;
+}
+
+.nav-link {
+    padding: 0rem !important;
+}
+
+.th-width-90 {
+    width: 90% !important;
+}
+
+.th-width-35 {
+    width: 35% !important;
+}
+
+.th-width-20 {
+    width: 20% !important;
+}
+
+.th-width-15 {
+    width: 15% !important;
+}
+
+.th-width-10 {
+    width: 10% !important;
+}
+
+.th-width-5 {
+    width: 5% !important;
+}
+
+/* color */
+.color-w {
+    color: white;
+}
+
+.color-g {
+    color: lawngreen;
+}
+
+.color-b {
+    color: black;
+}
+
+.color-r {
+    color: red;
+}
+
+/* table text */
+.table th {
+    padding: 0.1rem !important;
+    font-size: 8px !important;
+    text-align: left !important;
+}
+
+.table td {
+    padding-left: 0.2rem !important;
+    padding-right: 0.2rem !important;
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    font-size: 8px !important;
+    text-align: left !important;
+}
+
+.table tr, td {
+    user-select: none;
+}
+
+.tr-bg-r {
+    background-color: rgba(255, 0, 0, 0.5);
+}
+
+.tr-bg-y {
+    background-color: rgba(255, 240, 0, 0.5);
+}
+
+.table-sticky thead th {
+    background-color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* text */
+.text-align-r {
+    text-align: right;
+}
+
+.text-align-l {
+    text-align: left !important;
+}
+
+.text-align-c {
+    text-align: center;
+}
+
+.text-title {
+    text-align: center !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    user-select: none;
+}
+
+/* navbar */
+.navbar-item-text {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: bolder !important;
+    font-size: 14px !important;
+    margin: 0rem !important;
+}
+
+/* content */
+.content-header {
+    padding: 0.5rem 1rem !important;
+}
+
+/* Modal */
+.modal-content {
+    max-height: 80% !important;
+}
+
+.modal-title {
+    user-select: none;
+}
+
+/* timeline */
+.timeline {
+    margin: 0rem !important;
+}
+
+    .timeline > div {
+        margin: 0rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+.timeline-header {
+    padding: 0.5rem !important;
+}
+
+.timeline-body {
+    padding: 0.5rem !important;
+}
+
+.time {
+    padding: 0.5rem !important;
+}
+
+.timeline-text {
+    margin: 0rem !important;
+    font-weight: normal !important;
+    color: black !important;
+}
+
+/* card */
+.card {
+    margin-bottom: 0rem !important;
+}
+
+.card-header {
+    padding: 0.1rem 0.5rem !important;
+    background-color: lightgray !important;
+    color: black !important;
+    font-weight: bold;
+    user-select: none;
+}
+
+.card-display-left {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.card-display-right {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+}
+
+.card-flex-w {
+    padding: 0.5rem 0.1rem !important;
+    text-align: center !important;
+    background-color: lightgray !important;
+    color: black !important;
+    width: 2rem;
+    font-weight: bold !important;
+    font-size: 20px;
+}
+
+.card-margin-top {
+    margin-top: 1.5%;
+}
+
+/* block */
+.block-header-bg-gray {
+    background-color: lightgray !important;
+    color: black !important;
+    font-weight: bold !important;
+}
