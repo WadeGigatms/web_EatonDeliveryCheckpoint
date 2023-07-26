@@ -14,7 +14,7 @@ namespace EatonDeliveryCheckpoint.Dtos
         public string Item { get; set; }
         [JsonProperty(Required = Required.Always)]
         public string Material { get; set; }
-        [JsonProperty(Required = Required.Always)]
+        [JsonProperty(Required = Required.Always, PropertyName = " Delivery quantity ")]
         public string Quantity { get; set; }
         [JsonProperty(Required = Required.Always)]
         public string No { get; set; }

@@ -7,4 +7,6 @@ const axiosDeliveryRequest = axios.create({
     },
 })
 
-export const axiosDeliveryUpload = (data) => axiosDeliveryRequest.post("/upload", data)
+export const axiosDeliveryUpload = (data) => axiosDeliveryRequest.post("/upload", data);
+
+export const axiosDeliveryCargo = () => axiosDeliveryRequest.get("/cargo");

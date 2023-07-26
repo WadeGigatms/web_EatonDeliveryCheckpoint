@@ -1,9 +1,11 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { NAV_HOME, NAV_SEARCH, NAV_TITLE, NAV_UPLOAD } from '../constants';
 import DeliveryDashboard from './DeliveryDashboard';
 import UploadDashboard from './UploadDashboard';
-import Search from './Search';
+import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
+import CargoContent from './CargoContent';
+import { axiosDeliveryCargo } from '../axios/Axios';
 
 const Content = () => {
     const activeBtnClass = "btn btn-app p-0 h-100 btn-app-active"
@@ -13,6 +15,7 @@ const Content = () => {
     const [searchBtnClass, setSearchBtnClass] = useState(inactiveBtnClass)
     const [contentState, setContentState] = useState(0) // 0: home, 1: upload, 2: search
     const [deliveryState, setDeliveryState] = useState(false)
+    const [cargoNos, setCargoNos] = useState(null)
 
     const handleHomeClick = (e) => {
         setHomeBtnClass(activeBtnClass)
@@ -35,16 +38,31 @@ const Content = () => {
         setContentState(2)
     }
 
-    const renderContent = () => {
+    const renderContent = (contentState) => {
         switch (contentState) {
             case 0:
                 return <DeliveryDashboard />
             case 1:
                 return <UploadDashboard />
             case 2:
-                return <Search />
+                return <SearchDashboard />
             default:
                 return <></>
+        }
+    }
+
+    useEffect(() => {
+        requestGetCargoApi()
+    }, [contentState])
+
+    async function requestGetCargoApi() {
+        try {
+            const response = await axiosDeliveryCargo()
+            if (response.data.result == true) {
+                setCargoNos(response.data.cargoNos)
+            }
+        } catch (error) {
+
         }
     }
 
@@ -85,7 +103,17 @@ const Content = () => {
         </section>
         <section className="content vh-90">
             <div className="container-fluid h-100 p-3">
-                {renderContent()}
+                <div className="row h-100 p-3">
+                    <div className="col-sm-3 h-100">
+                        <CargoContent cargoNos={cargoNos} />
+                    </div>
+                    <div className="col-sm-6 h-100">
+
+                    </div>
+                    <div className="col-sm-3 h-100">
+
+                    </div>
+                </div>
             </div>
         </section>
     </div>

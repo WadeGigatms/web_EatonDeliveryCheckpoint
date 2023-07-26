@@ -1,9 +1,9 @@
 ﻿import React from 'react';
 
-const Search = () => {
+const SearchDashboard = () => {
     return <div className="row h-100 p-3">
         SEARCH
     </div>
 }
 
-export default Search
+export default SearchDashboard

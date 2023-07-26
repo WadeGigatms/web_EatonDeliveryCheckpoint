@@ -10,7 +10,6 @@ import {
     FORM_BTN_UPLOAD,
 
 } from '../constants';
-import ExcelData from './ExcelData';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { axiosDeliveryUpload } from '../axios/Axios';
@@ -28,6 +27,7 @@ const UploadDashboard = () => {
                 FileName: excelFileName,
                 FileData: excelData
             })
+            //console.log(json)
             const response = await axiosDeliveryUpload(json)
             if (response.data.result == true) {
                 setUploadResult(SUCCEED_UPLOAD)
@@ -89,8 +89,6 @@ const UploadDashboard = () => {
     }
 
     const renderPreview = () => {
-        const thead = Object.keys(excelData[0]).map((key) => (
-            <th key={key}>{key}</th>))
         return <div className="card card-primary">
             <div className="card-header">
                 {excelFileName}
@@ -99,18 +97,63 @@ const UploadDashboard = () => {
                 <table className="table text-nowrap table-sticky">
                     <thead>
                         <tr>
-                            {thead}
+                            {Object.keys(excelData[0]).map((key) => (
+                                <th key={key}>{key}</th>))}
                         </tr>
                     </thead>
                     <tbody>
-                        <ExcelData excelData={excelData} />
+                        {excelData.map((data, index) => (
+                            <tr key={index}>
+                                {Object.values(data).map((value, index) => (
+                                    <td key={index}>{value}</td>))}
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
         </div>
     }
 
+    return <>
+        {excelData ? (renderPreview()) : (<></>)}
+        <div className="card card-primary">
+            <div className="card-header">上傳檔案</div>
+            <form>
+                <div className="card-body">
+                    <div className="form-group">
+                        <div className="input-form">
+                            <TextField type="file" id="outlined-basic" variant="outlined" onChange={handleFile} />
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        {typeError && (
+                            <div className="alert alert-danger" role="alert">{typeError}</div>
+                        )}
+                    </div>
+                </div>
+                <div className="card-footer">
+                    <div className="form-group">
+                        <Button type="button" onClick={handlePreview} >{FORM_BTN_PREVIEW}</Button>
+                        <Button type="button" onClick={handleFileSubmit} >{FORM_BTN_UPLOAD}</Button>
+                        <Button type="button">{FORM_BTN_CANCEL}</Button>
+                    </div>
+                    <div className="form-group">
+                        {uploadResult && (
+                            <div className="alert alert-danger" role="alert">{uploadResult}</div>
+                        )}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </>
+    /*
     return <div className="row h-100 p-3">
+        <div className="col-sm-3 h-100">
+            DidUploadFile
+        </div>
+        <div className="col-sm-6 h-100">
+            {excelData ? (renderPreview()) : (<></>)}
+        </div>
         <div className="col-sm-3 h-100">
             <div className="card card-primary">
                 <div className="card-header">上傳檔案</div>
@@ -142,10 +185,8 @@ const UploadDashboard = () => {
                 </form>
             </div>
         </div>
-        <div className="col-sm-9 h-100">
-            {excelData ? (renderPreview()) : (<></>)}
-        </div>
     </div>
+    */
 }
 
 export default UploadDashboard

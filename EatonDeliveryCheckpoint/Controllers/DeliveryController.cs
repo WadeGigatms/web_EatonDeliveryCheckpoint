@@ -22,11 +22,11 @@ namespace EatonDeliveryCheckpoint.Controllers
 
         private readonly DeliveryService _service;
 
-        // GET api/<DeliveryController>/ready
-        [HttpGet("files")]
-        public IActionResult GetFiles()
+        // GET api/<DeliveryController>/cargo
+        [HttpGet("cargo")]
+        public IActionResult GetCargo()
         {
-            FileResultDto dto = _service.GetFiles();
+            CargoResultDto dto = (CargoResultDto)_service.GetCargo();
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
@@ -36,6 +36,13 @@ namespace EatonDeliveryCheckpoint.Controllers
         {
             ResultDto dto = _service.Post(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // GET api/<DeliveryController>/cargo
+        [HttpPost("work")]
+        public IActionResult PostWork()
+        {
+            return Ok();
         }
     }
 }

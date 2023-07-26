@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace EatonDeliveryCheckpoint.Dtos
 {
-    public class FileResultDto : IResultDto
+    public class CargoResultDto : ResultDto, IResultDto
     {
-        public bool Result { get; set; }
-        public string Error { get; set; }
-        public List<DeliveryFileDto> Files { get; set; }
+        public List<DeliveryCargoDto> CargoNos { get; set; }
     }
 }
