@@ -5,6 +5,7 @@ import UploadDashboard from './UploadDashboard';
 import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
 import CargoContent from './CargoContent';
+import CargoDataContent from './CargoDataContent';
 import { axiosDeliveryCargo } from '../axios/Axios';
 
 const Content = () => {
@@ -14,7 +15,6 @@ const Content = () => {
     const [uploadBtnClass, setUploadBtnClass] = useState(inactiveBtnClass)
     const [searchBtnClass, setSearchBtnClass] = useState(inactiveBtnClass)
     const [contentState, setContentState] = useState(0) // 0: home, 1: upload, 2: search
-    const [deliveryState, setDeliveryState] = useState(false)
     const [cargoNos, setCargoNos] = useState(null)
 
     const handleHomeClick = (e) => {
@@ -41,9 +41,9 @@ const Content = () => {
     const renderContent = (contentState) => {
         switch (contentState) {
             case 0:
-                return <DeliveryDashboard />
+                return <DeliveryDashboard cargoNos={cargoNos} />
             case 1:
-                return <UploadDashboard />
+                return <UploadDashboard cargoNos={cargoNos} />
             case 2:
                 return <SearchDashboard />
             default:
@@ -103,17 +103,7 @@ const Content = () => {
         </section>
         <section className="content vh-90">
             <div className="container-fluid h-100 p-3">
-                <div className="row h-100 p-3">
-                    <div className="col-sm-3 h-100">
-                        <CargoContent cargoNos={cargoNos} />
-                    </div>
-                    <div className="col-sm-6 h-100">
-
-                    </div>
-                    <div className="col-sm-3 h-100">
-
-                    </div>
-                </div>
+                {renderContent(contentState)}
             </div>
         </section>
     </div>

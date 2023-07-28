@@ -30,6 +30,14 @@ code {
     height: 100vh;
 }
 
+.h-8 {
+    height: 60% !important;
+}
+
+.h-4 {
+    height: 30% !important;
+}
+
 .h-3 {
     height: 32.8% !important;
 }

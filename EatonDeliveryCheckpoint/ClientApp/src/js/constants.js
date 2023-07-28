@@ -10,13 +10,18 @@ export const ERROR_FILE_EMPTY = "無檔案";
 export const ERROR_UPLOAD = "上傳失敗";
 export const SUCCEED_UPLOAD = "上傳成功";
 
-export const FORM_BTN_CHOOSE = "選擇";
+export const FORM_BTN_CHOOSE = "選擇檔案";
 export const FORM_BTN_UPLOAD = "上傳";
 export const FORM_BTN_REMOVE = "刪除";
 export const FORM_BTN_PREVIEW = "預覽";
 export const FORM_BTN_OK = "確認";
 export const FORM_BTN_CANCEL = "取消";
 
+
+export const TABLE_PREVIEW_DATA = "預覽DN";
+export const TABLE_UPLOADED_DN = "已上傳DN";
+export const TABLE_UPLOADED_MATERIAL = "即時料況";
+export const TABLE_UPLOADED_DATA = "即時資料";
 export const TABLE_CARGO_NO = "貨櫃編碼";
 export const TABLE_MATERIAL_QTY = "料號總數";
 export const TABLE_PRODUCT_QTY = "產品總數";
