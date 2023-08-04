@@ -1,5 +1,14 @@
-﻿import React, { useState, useEffect } from 'react';
-import { FormControlLabel, Checkbox } from '@mui/material';
+﻿import React, { useState } from 'react';
+import {
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Paper,
+    Checkbox
+} from '@mui/material';
 import {
     TABLE_UPLOADED_DN,
     TABLE_CARGO_NO,
@@ -7,47 +16,64 @@ import {
     TABLE_PRODUCT_QTY,
 } from '../constants'
 
-const CargoContent = ({ cargoNos, editState }) => {
-    const [checkedArray, setCheckedArray] = useState([false])
+const CargoContent = ({ deliveryStage, cargoNos, setSelectedCargoNo }) => {
+    const [selectedIndex, setSelectedIndex] = useState(-1)
 
-    useEffect(() => {
-        if (cargoNos) {
-            const boolArray = cargoNos.map(() => { return false })
-            setCheckedArray(boolArray)
-            console.log(boolArray)
+    const handleTableRowClick = (e, index) => {
+        if (deliveryStage === 1) {
+            if (selectedIndex !== index) {
+                setSelectedIndex(index)
+                setSelectedCargoNo(cargoNos[index])
+            } else {
+                setSelectedIndex(-1)
+                setSelectedCargoNo(null)
+            }
         }
-    }, [cargoNos])
+    }
+
+    function isSelected(index) {
+        return selectedIndex === index ? true : false
+    }
 
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_DN}</div>
         <div className="card-body table-responsive p-0">
-            <table className="table text-nowrap table-sticky">
-                <thead>
-                    <tr>
-                        {editState && <th></th> }
-                        <th>{TABLE_CARGO_NO}</th>
-                        <th>{TABLE_MATERIAL_QTY}</th>
-                        <th>{TABLE_PRODUCT_QTY}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cargoNos ? (
-                        cargoNos.map((cargono, index) => (
-                            <tr key={index}>
-                                {editState &&
-                                    <FormControlLabel
-                                        control={<Checkbox checked={checkedArray[index]} onChange={handleChange} />}
-                                    />}
-                                <th>{cargono.no}</th>
-                                <th>{cargono.material_quantity}</th>
-                                <th>{cargono.product_quantity}</th>
-                            </tr>
-                        ))
-                        ) : (<></>)}
-                </tbody>
-            </table>
+            <TableContainer component={Paper}>
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell></TableCell>
+                            <TableCell>{TABLE_CARGO_NO}</TableCell>
+                            <TableCell align="right">{TABLE_MATERIAL_QTY}</TableCell>
+                            <TableCell align="right">{TABLE_PRODUCT_QTY}</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {
+                            cargoNos ? cargoNos.map((row, index) => (
+                                <TableRow
+                                    hover
+                                    onClick={(e) => handleTableRowClick(e, index)}
+                                    role="checkbox"
+                                    key={index}
+                                    selected={isSelected(index)}
+                                    sx={{ cursor: 'pointer' }} >
+                                    {
+                                        deliveryStage > 0 ? (
+                                            <TableCell padding="checkbox">
+                                                <Checkbox checked={isSelected(index)} />
+                                            </TableCell>) : <TableCell></TableCell>
+                                    }
+                                    <TableCell>{row.no}</TableCell>
+                                    <TableCell align="right">{row.material_quantity}</TableCell>
+                                    <TableCell align="right">{row.product_quantity}</TableCell>
+                                </TableRow>
+                            )) : <></>
+                        }
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
-        <div className="card-footer"></div>
     </div>
 }
 

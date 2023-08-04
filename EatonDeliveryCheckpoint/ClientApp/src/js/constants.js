@@ -1,24 +1,27 @@
 ﻿export const VERSION = "v0.0.0";
 
-export const NAV_TITLE = "EATON 出貨檢核系統";
+export const NAV_TITLE = "EATON出貨Checkpoint系統";
 export const NAV_HOME = "首頁";
 export const NAV_UPLOAD = "上傳";
 export const NAV_SEARCH = "查詢";
 
-export const ERROR_FILE_TYPE = "錯誤檔案格式!請上傳Excel檔!";
-export const ERROR_FILE_EMPTY = "無檔案";
-export const ERROR_UPLOAD = "上傳失敗";
-export const SUCCEED_UPLOAD = "上傳成功";
+export const MESSAGE_ERROR_FILE_TYPE = "錯誤檔案格式!請上傳Excel檔!";
+export const MESSAGE_ERROR_FILE_EMPTY = "無檔案";
+export const MESSAGE_ERROR_UPLOAD = "上傳失敗";
+export const MESSAGE_SUCCEED_UPLOAD = "上傳成功";
 
-export const FORM_BTN_CHOOSE = "選擇檔案";
-export const FORM_BTN_UPLOAD = "上傳";
-export const FORM_BTN_REMOVE = "刪除";
-export const FORM_BTN_PREVIEW = "預覽";
-export const FORM_BTN_OK = "確認";
-export const FORM_BTN_CANCEL = "取消";
+export const BTN_CHOOSE_FILE = "選擇檔案";
+export const BTN_UPLOAD_FILE = "上傳檔案";
+export const BTN_CONFIRM = "確認";
+export const BTN_CANCEL = "取消";
+export const BTN_DELIVERY_READY = "準備出貨";
+export const BTN_DELIVERY_START = "開始出貨";
+export const BTN_DELIVERY_RESTART = "繼續出貨";
+export const BTN_DELIVERY_FINISH = "完成出貨";
+export const BTN_DELIVERY_ALERT_DISMISS = "解除出貨警示";
 
-
-export const TABLE_PREVIEW_DATA = "預覽DN";
+export const TABLE_PREVIEW_FILE = "預覽檔案";
+export const TABLE_UPLOAD_FILE = "上傳檔案";
 export const TABLE_UPLOADED_DN = "已上傳DN";
 export const TABLE_UPLOADED_MATERIAL = "即時料況";
 export const TABLE_UPLOADED_DATA = "即時資料";

@@ -1,5 +1,14 @@
 ﻿import React, { useState, useEffect } from 'react';
 import {
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Paper
+} from '@mui/material';
+import {
     TABLE_UPLOADED_DATA,
     TABLE_DATE,
     TABLE_START_TIME,
@@ -9,40 +18,49 @@ import {
     TABLE_INVALID_PALLET_QTY
 } from '../constants';
 
-const CargoRealtimeContent = ({ cargoNo }) => {
+const CargoRealtimeContent = ({ deliveryStage, cargoNo }) => {
+    const [dn, setDN] = useState(null)
+
+    useEffect(() => {
+        if (deliveryStage > 1 && cargoNo) {
+            setDN(cargoNo)
+        }
+    }, [deliveryStage, cargoNo])
+
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_DATA}</div>
         <div className="card-body table-responsive p-0">
-            <table className="table text-nowrap table-sticky">
-                <tbody>
-                    <tr>
-                        <th>{TABLE_DATE}</th>
-                        <td>{cargoNo && cargoNo.date}</td>
-                    </tr>
-                    <tr>
-                        <th>{TABLE_START_TIME}</th>
-                        <td>{cargoNo && cargoNo.start_time}</td>
-                    </tr>
-                    <tr>
-                        <th>{TABLE_END_TIME}</th>
-                        <td>{cargoNo && cargoNo.end_time}</td>
-                    </tr>
-                    <tr>
-                        <th>{TABLE_DURATION}</th>
-                        <td>{cargoNo && cargoNo.duration}</td>
-                    </tr>
-                    <tr>
-                        <th>{TABLE_VALID_PALLET_QTY}</th>
-                        <td>{cargoNo && cargoNo.valid_pallet_quantity}</td>
-                    </tr>
-                    <tr>
-                        <th>{TABLE_INVALID_PALLET_QTY}</th>
-                        <td>{cargoNo && cargoNo.invalid_pallet_quantity}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <TableContainer component={Paper}>
+                <Table size="small">
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>{TABLE_DATE}</TableCell>
+                            <TableCell align="right">{dn ? dn.date : "-"}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_START_TIME}</TableCell>
+                            <TableCell align="right">{dn ? dn.start_time : "-"}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_END_TIME}</TableCell>
+                            <TableCell align="right">{dn ? dn.end_time : "-"}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_DURATION}</TableCell>
+                            <TableCell align="right">{dn ? dn.duration : "-"}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_VALID_PALLET_QTY}</TableCell>
+                            <TableCell align="right">{dn ? dn.valid_pallet_quantity : "-"}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_INVALID_PALLET_QTY}</TableCell>
+                            <TableCell align="right">{dn ? dn.invalid_pallet_quantity : "-"}</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
-        <div className="card-footer"></div>
     </div>
 }
 

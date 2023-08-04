@@ -62,9 +62,10 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             r.pallet_quantity AS realtime_pallet_quantity 
                             FROM [scannel].[dbo].[eaton_delivery_cargo] AS c 
                             INNER JOIN [scannel].[dbo].[eaton_delivery_cargo_data] AS d 
-                            ON c.no=@no 
+                            ON c.id=d.f_delivery_cargo_id 
                             INNER JOIN [scannel].[dbo].[eaton_delivery_cargo_data_realtime] AS r 
-                            ON d.id=r.f_delivery_cargo_data_id ";
+                            ON d.id=r.f_delivery_cargo_data_id 
+                            WHERE c.no=@no ";
                 return _connection.Query<DeliveryCargoDataDto>(sql, new
                 {
                     no = no,

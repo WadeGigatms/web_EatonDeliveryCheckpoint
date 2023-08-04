@@ -39,7 +39,7 @@ namespace EatonDeliveryCheckpoint.Controllers
         }
 
         // GET api/<DeliveryController>/cargo
-        [HttpPost("work")]
+        [HttpPost("prepare")]
         public IActionResult PostWork()
         {
             return Ok();

@@ -1,30 +1,46 @@
 ﻿import React from "react";
 import {
-    TABLE_PREVIEW_DATA
-} from '../constants'
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Paper
+} from '@mui/material';
+import {
+    TABLE_PREVIEW_FILE
+} from '../constants';
 
-const UploadPreviewContent = ({ fileName, fileData }) => {
+const UploadPreviewContent = ({ fileData }) => {
     return <div className="card card-primary h-100">
         <div className="card-header">
-            {TABLE_PREVIEW_DATA} {fileName}
+            {TABLE_PREVIEW_FILE}
         </div>
         <div className="card-body table-responsive p-0">
-            <table className="table text-nowrap table-sticky">
-                <thead>
-                    <tr>
-                        {fileData && Object.keys(fileData[0]).map((key) => (
-                            <th key={key}>{key}</th>))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {fileData && fileData.map((data, index) => (
-                        <tr key={index}>
-                            {Object.values(data).map((value, index) => (
-                                <td key={index}>{value}</td>))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <TableContainer component={Paper}>
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            {
+                                fileData && Object.keys(fileData[0]).map((key) => (
+                                    <TableCell key={key}>{key}</TableCell>
+                                ))
+                            }
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {
+                            fileData && fileData.map((row, index) => (
+                                <TableRow key={index}>
+                                    {Object.values(row).map((value, index) => (
+                                        <TableCell key={index}>{value}</TableCell>))}
+                                </TableRow>
+                            ))
+                        }
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     </div>
 }

@@ -127,7 +127,7 @@ code {
 /* table text */
 .table th {
     padding: 0.1rem !important;
-    font-size: 8px !important;
+    font-size: 12px !important;
     text-align: left !important;
 }
 
@@ -136,7 +136,7 @@ code {
     padding-right: 0.2rem !important;
     padding-top: 0rem !important;
     padding-bottom: 0rem !important;
-    font-size: 8px !important;
+    font-size: 12px !important;
     text-align: left !important;
 }
 
@@ -175,7 +175,7 @@ code {
 .text-title {
     text-align: center !important;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 36px;
+    font-size: 30px;
     font-weight: bold;
     color: white;
     user-select: none;
@@ -274,3 +274,5 @@ code {
     color: black !important;
     font-weight: bold !important;
 }
+
+/* mui */

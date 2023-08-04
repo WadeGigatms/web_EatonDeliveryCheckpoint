@@ -4,8 +4,6 @@ import DeliveryDashboard from './DeliveryDashboard';
 import UploadDashboard from './UploadDashboard';
 import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
-import CargoContent from './CargoContent';
-import CargoDataContent from './CargoDataContent';
 import { axiosDeliveryCargo } from '../axios/Axios';
 
 const Content = () => {
@@ -62,7 +60,7 @@ const Content = () => {
                 setCargoNos(response.data.cargoNos)
             }
         } catch (error) {
-
+            console.log(error)
         }
     }
 
