@@ -9,7 +9,6 @@ const theme = createTheme({
     palette: {
         secondary: {
             main: colors.grey[500],
-            contrastText: colors.grey[50],
         },
     },
 })

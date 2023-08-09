@@ -18,14 +18,14 @@ import {
     TABLE_INVALID_PALLET_QTY
 } from '../constants';
 
-const CargoRealtimeContent = ({ deliveryStage, cargoNo }) => {
+const CargoDataInfoContent = ({ deliveryStep, cargoNo }) => {
     const [dn, setDN] = useState(null)
 
     useEffect(() => {
-        if (deliveryStage > 1 && cargoNo) {
+        if (deliveryStep > 1 && cargoNo) {
             setDN(cargoNo)
         }
-    }, [deliveryStage, cargoNo])
+    }, [deliveryStep, cargoNo])
 
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_DATA}</div>
@@ -64,4 +64,4 @@ const CargoRealtimeContent = ({ deliveryStage, cargoNo }) => {
     </div>
 }
 
-export default CargoRealtimeContent
+export default CargoDataInfoContent

@@ -30,6 +30,9 @@ namespace EatonDeliveryCheckpoint
             {
                 configuration.RootPath = "ClientApp/build";
             });
+            
+            // MemoryCache
+            services.AddMemoryCache();
 
             // Database: for Dapper
             services.AddScoped<ConnectionRepositoryManager>(serviceProvider =>

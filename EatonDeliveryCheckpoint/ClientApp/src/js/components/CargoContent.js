@@ -16,11 +16,11 @@ import {
     TABLE_PRODUCT_QTY,
 } from '../constants'
 
-const CargoContent = ({ deliveryStage, cargoNos, setSelectedCargoNo }) => {
+const CargoContent = ({ deliveryStep, cargoNos, setSelectedCargoNo }) => {
     const [selectedIndex, setSelectedIndex] = useState(-1)
 
     const handleTableRowClick = (e, index) => {
-        if (deliveryStage === 1) {
+        if (deliveryStep === 1) {
             if (selectedIndex !== index) {
                 setSelectedIndex(index)
                 setSelectedCargoNo(cargoNos[index])
@@ -59,7 +59,7 @@ const CargoContent = ({ deliveryStage, cargoNos, setSelectedCargoNo }) => {
                                     selected={isSelected(index)}
                                     sx={{ cursor: 'pointer' }} >
                                     {
-                                        deliveryStage > 0 ? (
+                                        deliveryStep > 0 ? (
                                             <TableCell padding="checkbox">
                                                 <Checkbox checked={isSelected(index)} />
                                             </TableCell>) : <TableCell></TableCell>

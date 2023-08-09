@@ -7,11 +7,9 @@ namespace EatonDeliveryCheckpoint.Dtos
 {
     public class DeliveryCargoDataDto
     {
-        public string delivery { get; set; }
-        public string item { get; set; }
         public string material { get; set; }
-        public string quantity { get; set; }
-        public string realtime_product_quantity { get; set; }
-        public string realtime_pallet_quantity { get; set; }
+        public int count { get; set; }
+        public int realtime_product_count { get; set; }
+        public int realtime_pallet_count { get; set; }
     }
 }

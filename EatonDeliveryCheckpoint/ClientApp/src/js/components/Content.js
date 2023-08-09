@@ -1,4 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
+import { Stack, Button } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
 import { NAV_HOME, NAV_SEARCH, NAV_TITLE, NAV_UPLOAD } from '../constants';
 import DeliveryDashboard from './DeliveryDashboard';
 import UploadDashboard from './UploadDashboard';
@@ -12,34 +14,38 @@ const Content = () => {
     const [homeBtnClass, setHomeBtnClass] = useState(activeBtnClass)
     const [uploadBtnClass, setUploadBtnClass] = useState(inactiveBtnClass)
     const [searchBtnClass, setSearchBtnClass] = useState(inactiveBtnClass)
-    const [contentState, setContentState] = useState(0) // 0: home, 1: upload, 2: search
+    const [contentPage, setContentPage] = useState(0) // 0: home, 1: upload, 2: search
+    const [deliveryState, setDeliveryState] = useState(0) // 0: none, 1: deliverying
     const [cargoNos, setCargoNos] = useState(null)
 
     const handleHomeClick = (e) => {
         setHomeBtnClass(activeBtnClass)
         setUploadBtnClass(inactiveBtnClass)
         setSearchBtnClass(inactiveBtnClass)
-        setContentState(0)
+        setContentPage(0)
     }
 
     const handleUploadClick = (e) => {
         setHomeBtnClass(inactiveBtnClass)
         setUploadBtnClass(activeBtnClass)
         setSearchBtnClass(inactiveBtnClass)
-        setContentState(1)
+        setContentPage(1)
     }
 
     const handleSearchClick = (e) => {
         setHomeBtnClass(inactiveBtnClass)
         setUploadBtnClass(inactiveBtnClass)
         setSearchBtnClass(activeBtnClass)
-        setContentState(2)
+        setContentPage(2)
     }
 
     const renderContent = (contentState) => {
         switch (contentState) {
             case 0:
-                return <DeliveryDashboard cargoNos={cargoNos} />
+                return <DeliveryDashboard
+                    deliveryState={deliveryState}
+                    setDeliveryState={setDeliveryState}
+                    cargoNos={cargoNos} />
             case 1:
                 return <UploadDashboard cargoNos={cargoNos} />
             case 2:
@@ -51,7 +57,16 @@ const Content = () => {
 
     useEffect(() => {
         requestGetCargoApi()
-    }, [contentState])
+    }, [contentPage])
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (deliveryState === 0) {
+                requestGetCargoApi()
+            }
+        }, 5000)
+        return () => clearInterval(interval)
+    }, [])
 
     async function requestGetCargoApi() {
         try {
@@ -101,7 +116,7 @@ const Content = () => {
         </section>
         <section className="content vh-90">
             <div className="container-fluid h-100 p-3">
-                {renderContent(contentState)}
+                {renderContent(contentPage)}
             </div>
         </section>
     </div>

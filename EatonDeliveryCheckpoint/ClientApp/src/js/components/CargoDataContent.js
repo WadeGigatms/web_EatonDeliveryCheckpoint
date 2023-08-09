@@ -16,12 +16,13 @@ import {
     TABLE_REALTIME_PALLET_QTY,
 } from '../constants';
 
-const CargoDataContent = ({ deliveryStage, selectedCargoNo }) => {
+const CargoDataContent = ({ deliveryStep, selectedCargoNo }) => {
     useEffect(() => {
         if (selectedCargoNo) {
             console.log(selectedCargoNo.no)
         }
     }, [selectedCargoNo])
+
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_MATERIAL}</div>
         <div className="card-body table-responsive p-0">
@@ -37,15 +38,25 @@ const CargoDataContent = ({ deliveryStage, selectedCargoNo }) => {
                     </TableHead>
                     <TableBody>
                         {
-                            selectedCargoNo ? selectedCargoNo.datas.map((row, index) => (
-                                <TableRow
-                                    key={index} >
-                                    <TableCell>{row.material}</TableCell>
-                                    <TableCell align="right">{row.quantity}</TableCell>
-                                    <TableCell align="right">{deliveryStage > 1 ? row.realtime_product_quantity : "-"}</TableCell>
-                                    <TableCell align="right">{deliveryStage > 1 ? row.realtime_pallet_quantity : "-"}</TableCell>
-                                </TableRow>
-                            )) : <></>
+                            selectedCargoNo ? selectedCargoNo.datas.map((row, index) => {
+                                var classname = ""
+                                if (row.count == row.realtime_product_count) {
+                                    classname = "lightgreen"
+                                } else if (row.count < row.realtime_product_count) {
+                                    classname = "red"
+                                }
+
+                                return (
+                                    <TableRow
+                                        sx={{ backgroundColor: classname }}
+                                        key={index} color="">
+                                        <TableCell>{row.material}</TableCell>
+                                        <TableCell align="right">{row.count}</TableCell>
+                                        <TableCell align="right">{deliveryStep > 1 ? row.realtime_product_count : "-"}</TableCell>
+                                        <TableCell align="right">{deliveryStep > 1 ? row.realtime_pallet_count : "-"}</TableCell>
+                                    </TableRow>
+                                )
+                            }) : <></>
                         }
                     </TableBody>
                 </Table>

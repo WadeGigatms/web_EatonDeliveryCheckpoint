@@ -16,6 +16,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         #region Query
 
+        public int QueryCargoNoCount()
+            => MsSqlConnectionRepository.QueryCargoNoCount();
+
         public List<DeliveryCargoDto> QueryDeliveryCargoDtos()
             => MsSqlConnectionRepository.QueryDeliveryCargoDtos();
 
@@ -28,11 +31,11 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public List<DeliveryCargoContext> QueryDeliveryCargoContextsWithFileId(int id)
             => MsSqlConnectionRepository.QueryDeliveryCargoContextsWithFileId(id);
 
-        public List<DeliveryCargoDataContext> QueryDeliveryCargoDataContextsWithCargoId(List<int> ids)
+        public List<CargoDataContext> QueryCargoDataContextsWithCargoId(List<int> ids)
             => MsSqlConnectionRepository.QueryDeliveryCargoDataContextsWithCargoId(ids);
 
-        public List<DeliveryCargoDataRealtimeContext> QueryDeliveryCargoDataRealtimeContextsWithCargoDataIds(List<int> ids)
-            => MsSqlConnectionRepository.QueryDeliveryCargoDataRealtimeContextsWithCargoDataIds(ids);
+        internal List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
+            => MsSqlConnectionRepository.QueryCargoDataInfoContexts(ids);
 
         #endregion
 
@@ -44,11 +47,18 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public bool InsertDeliveryCargoContexts(List<DeliveryCargoContext> contexts)
             => MsSqlConnectionRepository.InsertDeliveryCargoContexts(contexts);
 
-        public bool InsertDeliveryCargoDataContexts(List<DeliveryCargoDataContext> contexts)
-            => MsSqlConnectionRepository.InsertDeliveryCargoDataContexts(contexts);
+        public bool InsertCargoDataContexts(List<CargoDataContext> contexts)
+            => MsSqlConnectionRepository.InsertCargoDataContexts(contexts);
 
-        public bool InsertDeliveryCargoDataRealtimeContexts(List<DeliveryCargoDataRealtimeContext> contexts)
-            => MsSqlConnectionRepository.InsertDeliveryCargoDataRealtimeContexts(contexts);
+        public bool InsertCargoDataInfoContexts(List<CargoDataInfoContext> contexts)
+            => MsSqlConnectionRepository.InsertCargoDataInfoContexts(contexts);
+
+        #endregion
+
+        #region Update
+
+        public bool UpdateDeliveryCargoWhenStart(DeliveryCargoDto dto)
+            => MsSqlConnectionRepository.UpdateDeliveryCargoWhenStart(dto);
 
         #endregion
     }

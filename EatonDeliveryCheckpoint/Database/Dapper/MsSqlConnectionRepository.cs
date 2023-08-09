@@ -15,6 +15,27 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         #region Query
 
+        public int QueryCargoNoCount()
+        {
+            try
+            {
+                var sql = @"SELECT 
+                            COUNT(c.id) 
+                            FROM [scannel].[dbo].[eaton_delivery_cargo] AS c 
+                            INNER JOIN [scannel].[dbo].[eaton_delivery_file] AS f 
+                            ON c.f_delivery_file_id=f.id 
+                            WHERE c.state=@state ";
+                return _connection.Query<int>(sql, new
+                {
+                    state = -1,
+                }).FirstOrDefault();
+            }
+            catch (Exception exp)
+            {
+                return -1;
+            }
+        }
+
         public List<DeliveryCargoDto> QueryDeliveryCargoDtos()
         {
             try
@@ -54,17 +75,13 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"SELECT 
-                            d.delivery, 
-                            d.item, 
-                            d.material, 
-                            d.quantity, 
-                            r.product_quantity AS realtime_product_quantity, 
-                            r.pallet_quantity AS realtime_pallet_quantity 
+                            i.material, 
+                            i.count, 
+                            i.realtime_product_count, 
+                            i.realtime_pallet_count 
                             FROM [scannel].[dbo].[eaton_delivery_cargo] AS c 
-                            INNER JOIN [scannel].[dbo].[eaton_delivery_cargo_data] AS d 
-                            ON c.id=d.f_delivery_cargo_id 
-                            INNER JOIN [scannel].[dbo].[eaton_delivery_cargo_data_realtime] AS r 
-                            ON d.id=r.f_delivery_cargo_data_id 
+                            INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
+                            ON c.id=i.f_delivery_cargo_id 
                             WHERE c.no=@no ";
                 return _connection.Query<DeliveryCargoDataDto>(sql, new
                 {
@@ -111,13 +128,13 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public List<DeliveryCargoDataContext> QueryDeliveryCargoDataContextsWithCargoId(List<int> ids)
+        public List<CargoDataContext> QueryDeliveryCargoDataContextsWithCargoId(List<int> ids)
         {
             try
             {
-                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_delivery_cargo_data] 
+                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_cargo_data] 
                             WHERE f_delivery_cargo_id IN @ids ";
-                return _connection.Query<DeliveryCargoDataContext>(sql, new
+                return _connection.Query<CargoDataContext>(sql, new
                 {
                     ids = ids,
                 }).ToList();
@@ -128,13 +145,13 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public List<DeliveryCargoDataRealtimeContext> QueryDeliveryCargoDataRealtimeContextsWithCargoDataIds(List<int> ids)
+        public List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
         {
             try
             {
-                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_delivery_cargo_data_realtime] 
-                            WHERE f_delivery_cargo_data_id IN @ids ";
-                return _connection.Query<DeliveryCargoDataRealtimeContext>(sql, new
+                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_cargo_data_info] 
+                            WHERE f_delivery_cargo_id IN @ids ";
+                return _connection.Query<CargoDataInfoContext>(sql, new
                 {
                     ids = ids,
                 }).ToList();
@@ -224,13 +241,13 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public bool InsertDeliveryCargoDataContexts(List<DeliveryCargoDataContext> contexts)
+        public bool InsertCargoDataContexts(List<CargoDataContext> contexts)
         {
             try
             {
                 foreach(var context in contexts)
                 {
-                    var sql = @"INSERT INTO [scannel].[dbo].[eaton_delivery_cargo_data]( 
+                    var sql = @"INSERT INTO [scannel].[dbo].[eaton_cargo_data]( 
                                 f_delivery_cargo_id, 
                                 delivery, 
                                 item, 
@@ -260,29 +277,60 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public bool InsertDeliveryCargoDataRealtimeContexts(List<DeliveryCargoDataRealtimeContext> contexts)
+        public bool InsertCargoDataInfoContexts(List<CargoDataInfoContext> contexts)
         {
             try
             {
                 foreach (var context in contexts)
                 {
-                    var sql = @"INSERT INTO [scannel].[dbo].[eaton_delivery_cargo_data_realtime]( 
-                                f_delivery_cargo_data_id, 
-                                product_quantity, 
-                                pallet_quantity) 
+                    var sql = @"INSERT INTO [scannel].[dbo].[eaton_cargo_data_info]( 
+                                f_delivery_cargo_id, 
+                                material, 
+                                count, 
+                                realtime_product_count, 
+                                realtime_pallet_count)  
                                 VALUES( 
-                                @f_delivery_cargo_data_id, 
-                                @product_quantity, 
-                                @pallet_quantity) ";
+                                @f_delivery_cargo_id, 
+                                @material, 
+                                @count, 
+                                @realtime_product_count, 
+                                @realtime_pallet_count) ";
                     var result = _connection.Execute(sql, new
                     {
-                        f_delivery_cargo_data_id = context.f_delivery_cargo_data_id,
-                        product_quantity = context.product_quantity,
-                        pallet_quantity = context.pallet_quantity,
+                        f_delivery_cargo_id = context.f_delivery_cargo_id,
+                        material = context.material,
+                        count = context.count,
+                        realtime_product_count = context.realtime_product_count,
+                        realtime_pallet_count = context.realtime_pallet_count,
                     }) > 0;
                     if (!result) { return false; }
                 }
                 return true;
+            }
+            catch (Exception exp)
+            {
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Update
+
+        public bool UpdateDeliveryCargoWhenStart(DeliveryCargoDto dto)
+        {
+            try
+            {
+                var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_cargo] 
+                            SET date=@date, start_time=@start_time, state=@state 
+                            WHERE no=@no ";
+                return _connection.Execute(sql, new
+                {
+                    date = dto.date,
+                    start_time = dto.start_time,
+                    state = dto.state,
+                    no = dto.no,
+                }) > 0;
             }
             catch (Exception exp)
             {

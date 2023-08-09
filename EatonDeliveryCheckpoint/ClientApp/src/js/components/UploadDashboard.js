@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Stack, Button, TextField } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import * as XLSX from 'xlsx';
@@ -29,7 +29,8 @@ const UploadDashboard = ({ cargoNos }) => {
     const [uploadDescriptionResult, setUploadResultDescription] = useState(null)
     const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
-    const [resultAlertOpen, setReultAlertOpen] = useState(false)
+    const [uploadResultAlertOpen, setUploadReultAlertOpen] = useState(false)
+    const [fileTypeErrorAlertOpen, setFileTypeErrorAlertOpen] = useState(false)
 
     const handleFileSelect = (e) => {
         clearFile()
@@ -48,12 +49,14 @@ const UploadDashboard = ({ cargoNos }) => {
                     handlePreviewFileData(e.target.result)
                 }
             } else {
-                setFileTypeError(MESSAGE_ERROR_FILE_TYPE)
                 setLoadingAlertOpen(false)
+                setFileTypeError(MESSAGE_ERROR_FILE_TYPE)
+                setFileTypeErrorAlertOpen(true)
             }
         } else {
-            setFileTypeError(MESSAGE_ERROR_FILE_EMPTY)
             setLoadingAlertOpen(false)
+            setFileTypeError(MESSAGE_ERROR_FILE_EMPTY)
+            setFileTypeErrorAlertOpen(true)
         }
     }
 
@@ -89,9 +92,7 @@ const UploadDashboard = ({ cargoNos }) => {
 
     const handleCancelButtonClick = () => {
         setConfirmAlertOpen(false)
-        setReultAlertOpen(false)
-        clearFile()
-        clearResult()
+        setUploadReultAlertOpen(false)
     }
 
     async function requestPostUploadApi() {
@@ -105,16 +106,16 @@ const UploadDashboard = ({ cargoNos }) => {
             if (response.data.result == true) {
                 setUploadResult(true)
                 setUploadResultDescription(MESSAGE_SUCCEED_UPLOAD)
-                setReultAlertOpen(true)
+                setUploadReultAlertOpen(true)
             } else {
                 setUploadResult(false)
                 setUploadResultDescription(MESSAGE_ERROR_UPLOAD)
-                setReultAlertOpen(true)
+                setUploadReultAlertOpen(true)
             }
         } catch (error) {
             setUploadResult(false)
             setUploadResultDescription(MESSAGE_ERROR_UPLOAD + ": " + error.response.data.error)
-            setReultAlertOpen(true)
+            setUploadReultAlertOpen(true)
         }
         setLoadingAlertOpen(false)
     }
@@ -130,6 +131,13 @@ const UploadDashboard = ({ cargoNos }) => {
         setUploadResult(null)
         setUploadResultDescription(null)
     }
+
+    useEffect(() => {
+        if (confirmAlertOpen === false && uploadResultAlertOpen === false) {
+            clearFile()
+            clearResult()
+        }
+    }, [confirmAlertOpen, uploadResultAlertOpen])
 
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
@@ -177,14 +185,14 @@ const UploadDashboard = ({ cargoNos }) => {
             handlePrimaryButtonClick={handleConfirmButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
-            severity={!fileTypeError ? "success" : "error"}
-            open={fileTypeError ? true : false}
+            severity={fileTypeError !== null ? "success" : "error"}
+            open={fileTypeErrorAlertOpen}
             title={TABLE_UPLOAD_FILE}
             contentText={fileTypeError}
             handleButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
-            severity={uploadResult ? "success" : "error"}
-            open={resultAlertOpen}
+            severity={uploadResult !== false ? "success" : "error"}
+            open={uploadResultAlertOpen}
             title={TABLE_UPLOAD_FILE}
             contentText={uploadDescriptionResult}
             handleButtonClick={handleCancelButtonClick} />

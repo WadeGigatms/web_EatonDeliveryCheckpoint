@@ -2,7 +2,9 @@
 using EatonDeliveryCheckpoint.Database.Dapper;
 using EatonDeliveryCheckpoint.Dtos;
 using EatonDeliveryCheckpoint.Enums;
+using EatonDeliveryCheckpoint.HttpClients;
 using EatonDeliveryCheckpoint.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,15 +15,26 @@ namespace EatonDeliveryCheckpoint.Services
 {
     public class DeliveryService
     {
-        public DeliveryService(ConnectionRepositoryManager connection)
+        public DeliveryService(ConnectionRepositoryManager connection, IMemoryCache memoryCache)
         {
+            _localMemoryCache = new LocalMemoryCache(memoryCache);
             _connection = connection;
         }
 
+        private readonly LocalMemoryCache _localMemoryCache;
         private readonly ConnectionRepositoryManager _connection;
 
         public IResultDto GetCargo()
         {
+            // Read local memory
+            var cacheDtos = _localMemoryCache.ReadDeliveryCargoDtos();
+            var cacheCount = _localMemoryCache.ReadCargoNoCount();
+            var dbCount = _connection.QueryCargoNoCount();
+            if (dbCount == cacheCount)
+            {
+                return GetCargoResultDto(ResultEnum.True, ErrorEnum.None, cacheDtos);
+            }
+
             // Query did not terminate cargo no
             List<DeliveryCargoDto> cargoDtos = _connection.QueryDeliveryCargoDtos();
             if (cargoDtos == null)
@@ -40,10 +53,108 @@ namespace EatonDeliveryCheckpoint.Services
                 cargoDto.datas = cargoDataDtos;
             }
 
+            // Save to local memory
+            _localMemoryCache.SaveCargoNoCount(cargoDtos.Count());
+            _localMemoryCache.SaveDeliveryCargoDtos(cargoDtos);
+
             return GetCargoResultDto(ResultEnum.True, ErrorEnum.None, cargoDtos);
         }
 
-        public IResultDto Post(dynamic value)
+        public ResultDto PostFromTerminal(dynamic value)
+        {
+            DeliveryTerminalPostDto dto;
+            bool result;
+
+            // Check value
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                dto = JsonConvert.DeserializeObject<DeliveryTerminalPostDto>(value.ToString(), settings);
+            }
+            catch
+            {
+                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+            }
+
+            // 
+            DeliveryCargoDto deliveryingCargoDto = _localMemoryCache.ReadDeliveryingCargoDto();
+            if (deliveryingCargoDto == null)
+            {
+                // get data from db
+            }
+
+            // Data received from epc server and go check for valid or not
+            var datas = deliveryingCargoDto.datas;
+            var materials = deliveryingCargoDto.datas.Select(data => data.material).ToList();
+            if (materials.Contains(dto.pn)) 
+            {
+                var matchedData = datas.Where(data => data.material == dto.pn).First();
+                if (matchedData.count < matchedData.realtime_product_count + dto.qty)
+                {
+                    // Alert quantity is out of target count
+                    result = HttpClientManager.PostToTerminalReader(30, new int[] { 1 });
+                    // Update cache
+                }
+                else
+                {
+                    matchedData.realtime_product_count += dto.qty;
+                    matchedData.realtime_pallet_count += 1;
+                    // Update cache
+                    _localMemoryCache.SaveDeliveryingCargoDto(deliveryingCargoDto);
+                    // Update database
+                }
+            } 
+            else
+            {
+                // Alert pn is out of target material
+                result = HttpClientManager.PostToTerminalReader(30, new int[] { 1 });
+                // Update cache
+                // Update database
+            }
+
+            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+        }
+
+        public ResultDto PostToStart(dynamic value)
+        {
+            DeliveryCargoDto dto;
+            bool result;
+
+            // Check value
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                dto = JsonConvert.DeserializeObject<DeliveryCargoDto>(value.ToString(), settings);
+            }
+            catch (Exception exp)
+            {
+                return GetPostResultDto(ResultEnum.False, ErrorEnum.None);
+            }
+
+            // Update [eaton_delivery_cargo]
+            UpdateDeliveryCargoDtoWhenStart(ref dto);
+            result = _connection.UpdateDeliveryCargoWhenStart(dto);
+            if (result == false)
+            {
+                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+            }
+
+            // Save to local memory
+            _localMemoryCache.SaveDeliveryingCargoDto(dto);
+
+
+            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+        }
+
+        public IResultDto PostToUploadFile(dynamic value)
         {
             DeliveryUploadPostDto dto;
             bool result;
@@ -78,7 +189,7 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Query inserted file
+            // Query [eaton_delivery_file]
             DeliveryFileContext insertedDeliveryFileContext = _connection.QueryDeliveryFileContextWithFileName(dto.FileName);
             if (insertedDeliveryFileContext == null)
             {
@@ -93,45 +204,43 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Query inserted cargo
+            // Query [eaton_delivery_cargo]
             List<DeliveryCargoContext> insertedDeliveryCargoContexts = _connection.QueryDeliveryCargoContextsWithFileId(insertedDeliveryFileContext.id);
             if (insertedDeliveryCargoContexts == null)
             {
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Insert into [eaton_delivery_cargo_data]
-            List<DeliveryCargoDataContext> insertDeliveryCargoDataContexts = GetDeliveryCargoDataContexts(insertedDeliveryCargoContexts, dto.FileData);
-            result = _connection.InsertDeliveryCargoDataContexts(insertDeliveryCargoDataContexts);
+            // Insert into [eaton_cargo_data]
+            List<CargoDataContext> insertCargoDataContexts = GetCargoDataContexts(insertedDeliveryCargoContexts, dto.FileData);
+            result = _connection.InsertCargoDataContexts(insertCargoDataContexts);
             if (result == false)
             {
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Query inserted cargo data
-            List<int> cargoIds = insertDeliveryCargoDataContexts.Select(c => c.f_delivery_cargo_id).ToList();
-            List<DeliveryCargoDataContext> insertedDeliveryCargoDataContexts = _connection.QueryDeliveryCargoDataContextsWithCargoId(cargoIds);
-            if (insertedDeliveryCargoDataContexts == null)
+            // Query [eaton_cargo_data]
+            List<int> cargoIds = insertCargoDataContexts.Select(c => c.f_delivery_cargo_id).ToList();
+            List<CargoDataContext> insertedCargoDataContexts = _connection.QueryCargoDataContextsWithCargoId(cargoIds);
+            if (insertedCargoDataContexts == null)
             {
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Insert into [eaton_delivery_cargo_data_realtime]
-            List<int> cargoDataIds = insertedDeliveryCargoDataContexts.Select(c => c.id).ToList();
-            List<DeliveryCargoDataRealtimeContext> insertDeliveryCargoRealtimeContexts = GetDeliveryCargoRealtimeContexts(cargoDataIds);
-            result = _connection.InsertDeliveryCargoDataRealtimeContexts(insertDeliveryCargoRealtimeContexts);
+            // Insert into [eaton_cargo_data_info]
+            List<CargoDataInfoContext> insertCargoDataInfoContext = GetCargoDataInfoContexts(insertedCargoDataContexts);
+            result = _connection.InsertCargoDataInfoContexts(insertCargoDataInfoContext);
             if (result == false)
             {
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
-            // Query insert cargo data realtime
-            List<DeliveryCargoDataRealtimeContext> insertedDeliveryCargoDataRealtimeContexts = _connection.QueryDeliveryCargoDataRealtimeContextsWithCargoDataIds(cargoDataIds);
-            if (insertedDeliveryCargoDataRealtimeContexts == null)
+            // Query [eaton_cargo_data_info]
+            List<CargoDataInfoContext> insertedCargoDataInfoContext = _connection.QueryCargoDataInfoContexts(cargoIds);
+            if (insertedCargoDataInfoContext == null) 
             {
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
-            
 
 
             return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
@@ -183,13 +292,13 @@ namespace EatonDeliveryCheckpoint.Services
             return contexts;
         }
 
-        private List<DeliveryCargoDataContext> GetDeliveryCargoDataContexts(List<DeliveryCargoContext> deliveryCargoContexts, List<FileDto> fileData)
+        private List<CargoDataContext> GetCargoDataContexts(List<DeliveryCargoContext> deliveryCargoContexts, List<FileDto> fileData)
         {
-            List<DeliveryCargoDataContext> contexts = new List<DeliveryCargoDataContext>();
+            List<CargoDataContext> contexts = new List<CargoDataContext>();
             foreach(var data in fileData)
             {
                 var cargoId = deliveryCargoContexts.Find(c => c.no == data.No).id;
-                contexts.Add(new DeliveryCargoDataContext
+                contexts.Add(new CargoDataContext
                 {
                     f_delivery_cargo_id = cargoId,
                     delivery = data.Delivery,
@@ -201,16 +310,24 @@ namespace EatonDeliveryCheckpoint.Services
             return contexts;
         }
 
-        private List<DeliveryCargoDataRealtimeContext> GetDeliveryCargoRealtimeContexts(List<int> dataIds)
+        private List<CargoDataInfoContext> GetCargoDataInfoContexts(List<CargoDataContext> insertedCargoDataContexts)
         {
-            List<DeliveryCargoDataRealtimeContext> contexts = new List<DeliveryCargoDataRealtimeContext>();
-            foreach(var dataId in dataIds)
+            List<CargoDataInfoContext> contexts = new List<CargoDataInfoContext>();
+            var groupedContexts = insertedCargoDataContexts.GroupBy(context => context.material).Select(context => new
             {
-                contexts.Add(new DeliveryCargoDataRealtimeContext
+                f_delivery_cargo_id = context.Select(c => c.f_delivery_cargo_id).FirstOrDefault(),
+                material = context.Key,
+                count = context.Sum(d => d.quantity),
+            }).ToList();
+            foreach(var groupedContext in groupedContexts)
+            {
+                contexts.Add(new CargoDataInfoContext
                 {
-                    f_delivery_cargo_data_id = dataId,
-                    product_quantity = 0,
-                    pallet_quantity = 0,
+                    f_delivery_cargo_id = groupedContext.f_delivery_cargo_id,
+                    material = groupedContext.material,
+                    count = groupedContext.count,
+                    realtime_product_count = 0,
+                    realtime_pallet_count = 0,
                 });
             }
             return contexts;
@@ -226,56 +343,12 @@ namespace EatonDeliveryCheckpoint.Services
             };
         }
 
-        /*
-        private List<DeliveryWorkContext> GetDeliveryWorkContexts(int fileId, List<FileDto> fileDtos)
+        private void UpdateDeliveryCargoDtoWhenStart(ref DeliveryCargoDto dto)
         {
-            List<DeliveryWorkContext> contexts = new List<DeliveryWorkContext>();
-            List<string> cargoNos = new List<string>();
-            for (var i = 0; i < fileDtos.Count; i++)
-            {
-                var no = fileDtos[i].No;
-                if (!cargoNos.Contains(no))
-                {
-                    cargoNos.Add(no);
-                    contexts.Add(new DeliveryWorkContext
-                    {
-                        f_delivery_file_id = fileId,
-                        no = no,
-                        start_timestamp = null,
-                        end_timestamp = null,
-                        duration = TimeSpan.Zero.ToString(),
-                        valid_pallet_quantity = 0,
-                        invalid_pallet_quantity = 0,
-                        pallet_rate = 0,
-                        did_terminate = false,
-                    });
-                }
-            }
-            return contexts;
+            DateTime datetime = DateTime.Now;
+            dto.date = datetime.ToString("yyyy/MM/dd");
+            dto.start_time = datetime.ToString("HH:mm:ss");
+            dto.state = 0;
         }
-
-        private List<DeliveryFileDataContext> GetDeliveryFileDataContexts(int fileId, List<FileDto> fileDtos, List<DeliveryWorkContext> workContexts)
-        {
-            List<DeliveryFileDataContext> contexts = new List<DeliveryFileDataContext>();
-            foreach(var fileDto in fileDtos)
-            {
-                var workContext = workContexts.Find(workContext => workContext.no == fileDto.No);
-                if (workContext!= null)
-                {
-                    contexts.Add(new DeliveryFileDataContext
-                    {
-                        f_delivery_file_id = fileId,
-                        f_delivery_work_id = workContext.id,
-                        delivery = fileDto.Delivery,
-                        item = fileDto.Item ?? "",
-                        material = fileDto.Material,
-                        quantity = fileDto.Quantity,
-                        no = fileDto.No
-                    });
-                }
-            }
-            return contexts;
-        }
-        */
     }
 }

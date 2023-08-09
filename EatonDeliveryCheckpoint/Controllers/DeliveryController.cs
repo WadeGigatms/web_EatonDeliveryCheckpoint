@@ -1,11 +1,6 @@
 ﻿using EatonDeliveryCheckpoint.Dtos;
-using EatonDeliveryCheckpoint.Interfaces;
 using EatonDeliveryCheckpoint.Services;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -32,17 +27,26 @@ namespace EatonDeliveryCheckpoint.Controllers
 
         // POST api/<DeliveryController>
         [HttpPost("upload")]
-        public IActionResult Post([FromBody] dynamic value)
+        public IActionResult PostToUploadFile([FromBody] dynamic value)
         {
-            ResultDto dto = _service.Post(value);
+            ResultDto dto = _service.PostToUploadFile(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
-        // GET api/<DeliveryController>/cargo
-        [HttpPost("prepare")]
-        public IActionResult PostWork()
+        // POST api/<DeliveryController>
+        [HttpPost("start")]
+        public IActionResult PostToStart([FromBody] dynamic value)
         {
-            return Ok();
+            ResultDto dto = _service.PostToStart(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // POST api/<DeliveryController>
+        [HttpPost("terminal")]
+        public IActionResult PostFromTerminal([FromBody] dynamic value)
+        {
+            ResultDto dto = _service.PostFromTerminal(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
     }
 }
