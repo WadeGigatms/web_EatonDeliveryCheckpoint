@@ -17,19 +17,19 @@ namespace EatonDeliveryCheckpoint.Database
         }
 
 
-        // CargoNoCount: detect new dn uploaded
-        public int ReadCargoNoCount()
+        // CacheDidChange: detect new dn uploaded or updated
+        public bool ReadCacheDidChange()
         {
-            if (!_cache.TryGetValue(LocalMemoryCacheKey.CargoNoCount, out int cacheEntry))
+            if (!_cache.TryGetValue(LocalMemoryCacheKey.CacheDidChange, out bool cacheEntry))
             {
-                cacheEntry = -1;
+                cacheEntry = true;
             }
             return cacheEntry;
         }
 
-        public void SaveCargoNoCount(int count)
+        public void SaveCacheDidChange(bool changed)
         {
-            _cache.Set(LocalMemoryCacheKey.CargoNoCount, count, TimeSpan.FromHours(1));
+            _cache.Set(LocalMemoryCacheKey.CacheDidChange, changed, TimeSpan.FromHours(1));
         }
 
         // DeliveryCargoDtos: Cache the context sent to client
@@ -61,6 +61,13 @@ namespace EatonDeliveryCheckpoint.Database
         public void SaveDeliveryingCargoDto(DeliveryCargoDto dto)
         {
             _cache.Set(LocalMemoryCacheKey.DeliveryingCargoDto, dto, TimeSpan.FromHours(1));
+        }
+
+        public void DeleteDeliveryingCargoDto()
+        {
+            _cache.Remove(LocalMemoryCacheKey.DeliveryingCargoDto);
+
+            SaveCacheDidChange(true);
         }
     }
 }

@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace EatonDeliveryCheckpoint.Dtos
 {
-    public class CargoResultDto : ResultDto, IResultDto
+    public class DeliveryCargoResultDto : ResultDto, IResultDto
     {
-        public List<DeliveryCargoDto> CargoNos { get; set; }
+        public List<DeliveryCargoDto> deliveryCargoDtos { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿import {
+﻿import React from 'react';
+import {
     Dialog,
     DialogContent,
     DialogContentText,
@@ -10,7 +11,7 @@ const MuiProgress = ({ open }) => {
     return <Dialog open={open} >
         <DialogContent>
             <CircularProgress variant="indeterminate" disableShrink={true} size="4rem" />
-            <DialogContentText>Loading..</DialogContentText>
+            <DialogContentText>載入中</DialogContentText>
         </DialogContent>
     </Dialog>
 }

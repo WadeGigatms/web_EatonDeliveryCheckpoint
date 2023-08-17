@@ -9,6 +9,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
     public class ConnectionRepositoryManager
     {
         public MsSqlConnectionRepository MsSqlConnectionRepository { get; private set; }
+
         public ConnectionRepositoryManager(MsSqlConnectionRepository msSqlConnectionRepository)
         {
             MsSqlConnectionRepository = msSqlConnectionRepository;
@@ -16,8 +17,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         #region Query
 
-        public int QueryCargoNoCount()
-            => MsSqlConnectionRepository.QueryCargoNoCount();
+
+        public int QueryDeliveryCargoCount()
+            => MsSqlConnectionRepository.QueryDeliveryCargoCount();
 
         public List<DeliveryCargoDto> QueryDeliveryCargoDtos()
             => MsSqlConnectionRepository.QueryDeliveryCargoDtos();
@@ -34,8 +36,29 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public List<CargoDataContext> QueryCargoDataContextsWithCargoId(List<int> ids)
             => MsSqlConnectionRepository.QueryDeliveryCargoDataContextsWithCargoId(ids);
 
-        internal List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
+        public List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
             => MsSqlConnectionRepository.QueryCargoDataInfoContexts(ids);
+
+        public List<DeliveryCargoDto> QueryDeliveryCargoDtosWithState(int state)
+            => MsSqlConnectionRepository.QueryDeliveryCargoDtosWithState(state);
+
+        public CargoDataInfoContext QueryCargoDataInfoContextWithMaterial(string material)
+            => MsSqlConnectionRepository.QueryCargoDataInfoContextWithMaterial(material);
+
+        public CargoDataInfoContext QueryCargoDataInfoContextWithInvalidContext(CargoDataInfoContext context)
+            => MsSqlConnectionRepository.QueryCargoDataInfoContextWithInvalidContext(context);
+
+        public CargoDataInfoContext QueryCargoDataInfoContextWithInvalidNo(string no)
+            => MsSqlConnectionRepository.QueryCargoDataInfoContextWithInvalidNo(no);
+
+        public DeliveryCargoContext QueryDeliveryCargoContextWithId(int id)
+            => MsSqlConnectionRepository.QueryDeliveryCargoContextWithId(id);
+
+        public DeliveryCargoContext QueryDeliveryCargoContextWithNo(string no)
+            => MsSqlConnectionRepository.QueryDeliveryCargoContextWithNo(no);
+
+        public int QueryQtyByCargoDataRecordContextWithInfoIds(int cargo_id, int info_id)
+            => MsSqlConnectionRepository.QueryQtyByCargoDataRecordContextWithInfoIds(cargo_id, info_id);
 
         #endregion
 
@@ -53,12 +76,27 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public bool InsertCargoDataInfoContexts(List<CargoDataInfoContext> contexts)
             => MsSqlConnectionRepository.InsertCargoDataInfoContexts(contexts);
 
+        public bool InsertCargoDataInfoContext(CargoDataInfoContext context)
+            => MsSqlConnectionRepository.InsertCargoDataInfoContext(context);
+
+        public bool InsertCargoDataRecordContext(CargoDataRecordContext context)
+            => MsSqlConnectionRepository.InsertCargoDataRecordContext(context);
+
         #endregion
 
         #region Update
 
-        public bool UpdateDeliveryCargoWhenStart(DeliveryCargoDto dto)
-            => MsSqlConnectionRepository.UpdateDeliveryCargoWhenStart(dto);
+        public bool UpdateDeliveryCargoContextWhenStart(DeliveryCargoDto dto)
+            => MsSqlConnectionRepository.UpdateDeliveryCargoContextWhenStart(dto);
+
+        public bool UpdateDeliveryCargoContextWhenFinish(DeliveryCargoDto dto)
+            => MsSqlConnectionRepository.UpdateDeliveryCargoContextWhenFinish(dto);
+
+        public bool UpdateDeliveryCargoContextWhenDataInserted(DeliveryCargoContext context)
+            => MsSqlConnectionRepository.UpdateDeliveryCargoContextWhenDataInserted(context);
+
+        public bool UpdateCargoDataInfoContext(CargoDataInfoContext context)
+            => MsSqlConnectionRepository.UpdateCargoDataInfoContext(context);
 
         #endregion
     }

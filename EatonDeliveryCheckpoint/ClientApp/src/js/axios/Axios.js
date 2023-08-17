@@ -1,12 +1,13 @@
 ﻿import axios from 'axios';
 
-const axiosDeliveryRequest = axios.create({
+const axiosRequest = axios.create({
     baseURL: "/api/delivery",
     headers: {
         'Content-Type': 'application/json'
     },
 })
 
-export const axiosDeliveryUpload = (data) => axiosDeliveryRequest.post("/upload", data);
-
-export const axiosDeliveryCargo = () => axiosDeliveryRequest.get("/cargo");
+export const axiosDeliveryUploadPostApi = (data) => axiosRequest.post("/upload", data);
+export const axiosDeliveryCargoGetApi = () => axiosRequest.get("/dnlist");
+export const axiosDeliveryCargoStartPostApi = (data) => axiosRequest.post("/start", data);
+export const axiosDeliveryCargoFinishPostApi = (data) => axiosRequest.post("/finish", data);

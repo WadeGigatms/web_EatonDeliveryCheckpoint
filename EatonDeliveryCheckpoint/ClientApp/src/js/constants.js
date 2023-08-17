@@ -18,6 +18,7 @@ export const BTN_DELIVERY_READY = "準備出貨";
 export const BTN_DELIVERY_START = "開始出貨";
 export const BTN_DELIVERY_RESTART = "繼續出貨";
 export const BTN_DELIVERY_FINISH = "完成出貨";
+export const BTN_DELIVERY_QUIT = "退出出貨";
 export const BTN_DELIVERY_ALERT_DISMISS = "解除出貨警示";
 
 export const TABLE_PREVIEW_FILE = "預覽檔案";

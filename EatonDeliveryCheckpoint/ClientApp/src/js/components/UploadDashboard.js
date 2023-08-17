@@ -11,26 +11,28 @@ import {
     BTN_CANCEL,
     BTN_UPLOAD_FILE,
     TABLE_UPLOAD_FILE,
-    ALERT_UPLOAD_START
 } from '../constants';
-import { axiosDeliveryUpload } from '../axios/Axios';
+import { axiosDeliveryUploadPostApi } from '../axios/Axios';
 import CargoContent from './CargoContent';
 import UploadPreviewContent from './UploadPreviewContent';
 import MuiConfirmDialog from "./MuiConfirmDialog";
 import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
 
-const UploadDashboard = ({ cargoNos }) => {
+const UploadDashboard = ({ deliveryCargoDtos }) => {
     const [file, setFile] = useState(null)
     const [fileName, setFileName] = useState(null)
     const [fileData, setFileData] = useState(null)
     const [fileTypeError, setFileTypeError] = useState(null)
     const [uploadResult, setUploadResult] = useState(null)
     const [uploadDescriptionResult, setUploadResultDescription] = useState(null)
-    const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
+    const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [uploadResultAlertOpen, setUploadReultAlertOpen] = useState(false)
     const [fileTypeErrorAlertOpen, setFileTypeErrorAlertOpen] = useState(false)
+    const [fileTypeErrorSeverity, setFileTypeErrorSeverity] = useState("success")
+    const [uploadResultSeverity, setUploadResultSeverity] = useState("success")
+
 
     const handleFileSelect = (e) => {
         clearFile()
@@ -44,6 +46,7 @@ const UploadDashboard = ({ cargoNos }) => {
                 let reader = new FileReader();
                 reader.readAsArrayBuffer(selectedFile)
                 reader.onload = (e) => {
+                    setLoadingAlertOpen(false)
                     setFile(e.target.result)
                     setFileName(selectedFile.name)
                     handlePreviewFileData(e.target.result)
@@ -61,6 +64,7 @@ const UploadDashboard = ({ cargoNos }) => {
     }
 
     const handlePreviewFileData = (file) => {
+        setLoadingAlertOpen(true)
         if (file !== null) {
             const workbook = XLSX.read(file, { type: 'buffer' })
             const worksheetName = workbook.SheetNames[0]
@@ -91,8 +95,12 @@ const UploadDashboard = ({ cargoNos }) => {
     }
 
     const handleCancelButtonClick = () => {
+        setFileTypeErrorAlertOpen(false)
         setConfirmAlertOpen(false)
         setUploadReultAlertOpen(false)
+        setFile(null)
+        setFileName(null)
+        setFileData(null)
     }
 
     async function requestPostUploadApi() {
@@ -102,8 +110,8 @@ const UploadDashboard = ({ cargoNos }) => {
                 FileName: fileName,
                 FileData: fileData
             })
-            const response = await axiosDeliveryUpload(json)
-            if (response.data.result == true) {
+            const response = await axiosDeliveryUploadPostApi(json)
+            if (response.data.result === true) {
                 setUploadResult(true)
                 setUploadResultDescription(MESSAGE_SUCCEED_UPLOAD)
                 setUploadReultAlertOpen(true)
@@ -132,18 +140,23 @@ const UploadDashboard = ({ cargoNos }) => {
         setUploadResultDescription(null)
     }
 
+    function isDisabled(file) {
+        return file === null ? true : false
+    }
+
     useEffect(() => {
-        if (confirmAlertOpen === false && uploadResultAlertOpen === false) {
-            clearFile()
-            clearResult()
-        }
-    }, [confirmAlertOpen, uploadResultAlertOpen])
+        setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
+    }, [fileTypeError])
+
+    useEffect(() => {
+        setUploadResultSeverity(uploadResult === true ? "success" : "error")
+    }, [uploadResult])
 
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
             <CargoContent
-                cargoNos={cargoNos}
-                setSelectedCargoNo={null} />
+                deliveryCargoDtos={deliveryCargoDtos}
+                setSelectedDeliveryCargoDtos={null} />
         </div>
         <div className="col-sm-6 h-100">
             <UploadPreviewContent fileData={fileData} />
@@ -173,25 +186,25 @@ const UploadDashboard = ({ cargoNos }) => {
                 </div>
 
                 <Stack spacing={2} direction="column">
-                    <Button variant="contained" color="primary" size="large" onClick={handleFileUpload}>{BTN_UPLOAD_FILE}</Button>
-                    <Button variant="contained" color="secondary" size="large" onClick={handleFileCancel}>{BTN_CANCEL}</Button>
+                    <Button variant="contained" color="primary" size="large" onClick={handleFileUpload} disabled={isDisabled(file)}>{BTN_UPLOAD_FILE}</Button>
+                    <Button variant="contained" color="secondary" size="large" onClick={handleFileCancel} disabled={isDisabled(file)}>{BTN_CANCEL}</Button>
                 </Stack>
             </Stack>
         </div>
         <MuiConfirmDialog
             open={confirmAlertOpen}
             title={TABLE_UPLOAD_FILE}
-            contentText={ALERT_UPLOAD_START}
+            contentText={TABLE_UPLOAD_FILE}
             handlePrimaryButtonClick={handleConfirmButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
-            severity={fileTypeError !== null ? "success" : "error"}
+            severity={fileTypeErrorSeverity}
             open={fileTypeErrorAlertOpen}
             title={TABLE_UPLOAD_FILE}
             contentText={fileTypeError}
             handleButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
-            severity={uploadResult !== false ? "success" : "error"}
+            severity={uploadResultSeverity}
             open={uploadResultAlertOpen}
             title={TABLE_UPLOAD_FILE}
             contentText={uploadDescriptionResult}

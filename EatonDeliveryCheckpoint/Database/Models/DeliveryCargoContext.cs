@@ -12,13 +12,10 @@ namespace EatonDeliveryCheckpoint.Database
         public string no { get; set; }
         public int material_quantity { get; set; }
         public int product_quantity { get; set; }
-        public DateTime? date { get; set; }
-        public TimeSpan? start_time { get; set; }
-        public TimeSpan? end_time { get; set; }
-        public TimeSpan? duration { get; set; }
+        public DateTime? start_time { get; set; }
+        public DateTime? end_time { get; set; }
         public int valid_pallet_quantity { get; set; }
         public int invalid_pallet_quantity { get; set; }
-        public float pallet_rate { get; set; }
-        public int state { get; set; } // -1: did not terminate, 0: working, 1: did terminate
+        public int state { get; set; } // -1: ready to delivery, 0: deliverying, 1: did delivery
     }
 }

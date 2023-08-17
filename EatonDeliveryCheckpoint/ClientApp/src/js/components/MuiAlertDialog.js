@@ -1,10 +1,9 @@
-﻿import {
+﻿import React from 'react';
+import {
     Button,
     Alert,
-    AlertTitle,
     Dialog,
     DialogTitle,
-    DialogContent,
     DialogActions,
 } from '@mui/material';
 import {

@@ -16,23 +16,23 @@ import {
     TABLE_PRODUCT_QTY,
 } from '../constants'
 
-const CargoContent = ({ deliveryStep, cargoNos, setSelectedCargoNo }) => {
-    const [selectedIndex, setSelectedIndex] = useState(-1)
+const CargoContent = ({ deliveryStep, deliveryCargoDtos, setSelectedDeliveryCargoDto }) => {
+    const [selectedNo, setSelectedNo] = useState("")
 
-    const handleTableRowClick = (e, index) => {
+    const handleTableRowClick = (e, index, no) => {
         if (deliveryStep === 1) {
-            if (selectedIndex !== index) {
-                setSelectedIndex(index)
-                setSelectedCargoNo(cargoNos[index])
+            if (selectedNo !== no) {
+                setSelectedNo(no)
+                setSelectedDeliveryCargoDto(deliveryCargoDtos[index])
             } else {
-                setSelectedIndex(-1)
-                setSelectedCargoNo(null)
+                setSelectedNo(-1)
+                setSelectedDeliveryCargoDto(null)
             }
         }
     }
 
-    function isSelected(index) {
-        return selectedIndex === index ? true : false
+    function isSelected(no) {
+        return selectedNo === no ? true : false
     }
 
     return <div className="card card-primary h-100">
@@ -50,18 +50,18 @@ const CargoContent = ({ deliveryStep, cargoNos, setSelectedCargoNo }) => {
                     </TableHead>
                     <TableBody>
                         {
-                            cargoNos ? cargoNos.map((row, index) => (
+                            deliveryCargoDtos ? deliveryCargoDtos.map((row, index) => (
                                 <TableRow
                                     hover
-                                    onClick={(e) => handleTableRowClick(e, index)}
+                                    onClick={(e) => handleTableRowClick(e, index, row.no)}
                                     role="checkbox"
                                     key={index}
-                                    selected={isSelected(index)}
+                                    selected={isSelected(row.no)}
                                     sx={{ cursor: 'pointer' }} >
                                     {
                                         deliveryStep > 0 ? (
                                             <TableCell padding="checkbox">
-                                                <Checkbox checked={isSelected(index)} />
+                                                <Checkbox checked={isSelected(row.no)} />
                                             </TableCell>) : <TableCell></TableCell>
                                     }
                                     <TableCell>{row.no}</TableCell>

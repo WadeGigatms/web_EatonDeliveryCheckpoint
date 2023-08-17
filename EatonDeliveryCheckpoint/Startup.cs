@@ -30,7 +30,10 @@ namespace EatonDeliveryCheckpoint
             {
                 configuration.RootPath = "ClientApp/build";
             });
-            
+
+            // IHttpClientFactory
+            services.AddHttpClient();
+
             // MemoryCache
             services.AddMemoryCache();
 

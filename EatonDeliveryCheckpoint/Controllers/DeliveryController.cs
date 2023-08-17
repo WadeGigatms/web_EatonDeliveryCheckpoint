@@ -18,10 +18,10 @@ namespace EatonDeliveryCheckpoint.Controllers
         private readonly DeliveryService _service;
 
         // GET api/<DeliveryController>/cargo
-        [HttpGet("cargo")]
-        public IActionResult GetCargo()
+        [HttpGet("dnlist")]
+        public IActionResult GetDnList()
         {
-            CargoResultDto dto = (CargoResultDto)_service.GetCargo();
+            DeliveryCargoResultDto dto = (DeliveryCargoResultDto)_service.GetDnList();
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
@@ -42,10 +42,26 @@ namespace EatonDeliveryCheckpoint.Controllers
         }
 
         // POST api/<DeliveryController>
-        [HttpPost("terminal")]
-        public IActionResult PostFromTerminal([FromBody] dynamic value)
+        [HttpPost("finish")]
+        public IActionResult PostToFinish([FromBody] dynamic value)
         {
-            ResultDto dto = _service.PostFromTerminal(value);
+            ResultDto dto = _service.PostToFinish(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // POST api/<DeliveryController>
+        [HttpPost("terminal")]
+        public IActionResult PostFromEpcServer([FromBody] dynamic value)
+        {
+            ResultDto dto = _service.PostFromEpcServer(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // POST api/<DeliveryController>
+        [HttpPost("cancelalert")]
+        public IActionResult PostToCancelAlert([FromBody] dynamic value)
+        {
+            ResultDto dto = (ResultDto)_service.PostToCancelAlert(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
     }

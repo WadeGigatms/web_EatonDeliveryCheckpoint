@@ -6,7 +6,7 @@ import DeliveryDashboard from './DeliveryDashboard';
 import UploadDashboard from './UploadDashboard';
 import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
-import { axiosDeliveryCargo } from '../axios/Axios';
+import { axiosDeliveryCargoGetApi } from '../axios/Axios';
 
 const Content = () => {
     const activeBtnClass = "btn btn-app p-0 h-100 btn-app-active"
@@ -16,7 +16,14 @@ const Content = () => {
     const [searchBtnClass, setSearchBtnClass] = useState(inactiveBtnClass)
     const [contentPage, setContentPage] = useState(0) // 0: home, 1: upload, 2: search
     const [deliveryState, setDeliveryState] = useState(0) // 0: none, 1: deliverying
-    const [cargoNos, setCargoNos] = useState(null)
+    const [deliveryCargoDtos, setDeliveryCargoDtos] = useState(null)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            requestGetApi()
+        }, 5000)
+        return () => clearInterval(interval)
+    }, [deliveryState])
 
     const handleHomeClick = (e) => {
         setHomeBtnClass(activeBtnClass)
@@ -45,9 +52,10 @@ const Content = () => {
                 return <DeliveryDashboard
                     deliveryState={deliveryState}
                     setDeliveryState={setDeliveryState}
-                    cargoNos={cargoNos} />
+                    deliveryCargoDtos={deliveryCargoDtos}
+                    requestGetApi={requestGetApi}/>
             case 1:
-                return <UploadDashboard cargoNos={cargoNos} />
+                return <UploadDashboard deliveryCargoDtos={deliveryCargoDtos} />
             case 2:
                 return <SearchDashboard />
             default:
@@ -55,24 +63,12 @@ const Content = () => {
         }
     }
 
-    useEffect(() => {
-        requestGetCargoApi()
-    }, [contentPage])
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (deliveryState === 0) {
-                requestGetCargoApi()
-            }
-        }, 5000)
-        return () => clearInterval(interval)
-    }, [])
-
-    async function requestGetCargoApi() {
+    async function requestGetApi() {
         try {
-            const response = await axiosDeliveryCargo()
+            const response = await axiosDeliveryCargoGetApi()
             if (response.data.result == true) {
-                setCargoNos(response.data.cargoNos)
+                setDeliveryCargoDtos(response.data.deliveryCargoDtos)
+                console.log(response.data.deliveryCargoDtos)
             }
         } catch (error) {
             console.log(error)
@@ -98,13 +94,13 @@ const Content = () => {
                                 </button>
                             </li>
                             <li className="nav-item nav-link h-100">
-                                <button type="button" className={uploadBtnClass} onClick={handleUploadClick} >
+                                <button type="button" className={uploadBtnClass} onClick={handleUploadClick} disabled={deliveryState === 1} >
                                     <i className="fas fa-upload"></i>
                                     <label className="navbar-item-text">{NAV_UPLOAD}</label>
                                 </button>
                             </li>
                             <li className="nav-item nav-link h-100">
-                                <button type="button" className={searchBtnClass} onClick={handleSearchClick} >
+                                <button type="button" className={searchBtnClass} onClick={handleSearchClick} disabled={deliveryState === 1}  >
                                     <i className="fas fa-search"></i>
                                     <label className="navbar-item-text">{NAV_SEARCH}</label>
                                 </button>

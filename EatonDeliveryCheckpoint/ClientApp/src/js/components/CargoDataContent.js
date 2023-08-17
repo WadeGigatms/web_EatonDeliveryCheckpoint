@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React from 'react';
 import {
     TableContainer,
     Table,
@@ -16,12 +16,7 @@ import {
     TABLE_REALTIME_PALLET_QTY,
 } from '../constants';
 
-const CargoDataContent = ({ deliveryStep, selectedCargoNo }) => {
-    useEffect(() => {
-        if (selectedCargoNo) {
-            console.log(selectedCargoNo.no)
-        }
-    }, [selectedCargoNo])
+const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
 
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_MATERIAL}</div>
@@ -38,7 +33,7 @@ const CargoDataContent = ({ deliveryStep, selectedCargoNo }) => {
                     </TableHead>
                     <TableBody>
                         {
-                            selectedCargoNo ? selectedCargoNo.datas.map((row, index) => {
+                            selectedDeliveryCargoDto ? selectedDeliveryCargoDto.datas.map((row, index) => {
                                 var classname = ""
                                 if (row.count == row.realtime_product_count) {
                                     classname = "lightgreen"
