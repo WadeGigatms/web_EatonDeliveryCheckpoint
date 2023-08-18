@@ -35,10 +35,14 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
                         {
                             selectedDeliveryCargoDto ? selectedDeliveryCargoDto.datas.map((row, index) => {
                                 var classname = ""
-                                if (row.count == row.realtime_product_count) {
+                                if (row.count === row.realtime_product_count) {
                                     classname = "lightgreen"
                                 } else if (row.count < row.realtime_product_count) {
                                     classname = "red"
+
+                                    if (row.alert === 0) {
+                                        return <></>
+                                    }
                                 }
 
                                 return (

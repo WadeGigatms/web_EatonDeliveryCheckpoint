@@ -8,6 +8,7 @@ import {
     MESSAGE_ERROR_UPLOAD,
     MESSAGE_SUCCEED_UPLOAD,
     BTN_CHOOSE_FILE,
+    BTN_CONFIRM,
     BTN_CANCEL,
     BTN_UPLOAD_FILE,
     TABLE_UPLOAD_FILE,
@@ -33,6 +34,13 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
     const [fileTypeErrorSeverity, setFileTypeErrorSeverity] = useState("success")
     const [uploadResultSeverity, setUploadResultSeverity] = useState("success")
 
+    useEffect(() => {
+        setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
+    }, [fileTypeError])
+
+    useEffect(() => {
+        setUploadResultSeverity(uploadResult === true ? "success" : "error")
+    }, [uploadResult])
 
     const handleFileSelect = (e) => {
         clearFile()
@@ -144,14 +152,6 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
         return file === null ? true : false
     }
 
-    useEffect(() => {
-        setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
-    }, [fileTypeError])
-
-    useEffect(() => {
-        setUploadResultSeverity(uploadResult === true ? "success" : "error")
-    }, [uploadResult])
-
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
             <CargoContent
@@ -193,19 +193,24 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
         </div>
         <MuiConfirmDialog
             open={confirmAlertOpen}
+            onClose={handleCancelButtonClick}
             title={TABLE_UPLOAD_FILE}
             contentText={TABLE_UPLOAD_FILE}
+            primaryButton={BTN_CONFIRM}
+            secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
             severity={fileTypeErrorSeverity}
             open={fileTypeErrorAlertOpen}
+            onClose={null}
             title={TABLE_UPLOAD_FILE}
             contentText={fileTypeError}
             handleButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
             severity={uploadResultSeverity}
             open={uploadResultAlertOpen}
+            onClose={null}
             title={TABLE_UPLOAD_FILE}
             contentText={uploadDescriptionResult}
             handleButtonClick={handleCancelButtonClick} />

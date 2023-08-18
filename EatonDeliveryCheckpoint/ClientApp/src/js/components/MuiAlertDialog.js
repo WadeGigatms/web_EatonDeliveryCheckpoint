@@ -10,9 +10,9 @@ import {
     BTN_CONFIRM,
 } from '../constants';
 
-const MuiAlertDialog = ({ severity, open, title, contentText, handleButtonClick }) => {
+const MuiAlertDialog = ({ severity, open, onClose, title, contentText, handleButtonClick }) => {
 
-    return <Dialog open={open} fullWidth={true} maxWidth="xs">
+    return <Dialog open={open} onClose={onClose} fullWidth={true} maxWidth="xs">
         <DialogTitle>{title}</DialogTitle>
         <Alert variant="filled" severity={severity}>
             {contentText}

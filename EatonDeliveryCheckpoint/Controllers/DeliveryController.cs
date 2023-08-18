@@ -58,10 +58,18 @@ namespace EatonDeliveryCheckpoint.Controllers
         }
 
         // POST api/<DeliveryController>
-        [HttpPost("cancelalert")]
-        public IActionResult PostToCancelAlert([FromBody] dynamic value)
+        [HttpPost("dismissalert")]
+        public IActionResult PostToDismissAlert([FromBody] dynamic value)
         {
-            ResultDto dto = (ResultDto)_service.PostToCancelAlert(value);
+            ResultDto dto = (ResultDto)_service.PostToDismissAlert(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // POST api/<DeliveryController>
+        [HttpPost("quit")]
+        public IActionResult PostToQuit([FromBody] dynamic value)
+        {
+            ResultDto dto = (ResultDto)_service.PostToQuit(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
     }

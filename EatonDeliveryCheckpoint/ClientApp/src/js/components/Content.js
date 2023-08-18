@@ -6,7 +6,7 @@ import DeliveryDashboard from './DeliveryDashboard';
 import UploadDashboard from './UploadDashboard';
 import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
-import { axiosDeliveryCargoGetApi } from '../axios/Axios';
+import { axiosDeliveryGetApi } from '../axios/Axios';
 
 const Content = () => {
     const activeBtnClass = "btn btn-app p-0 h-100 btn-app-active"
@@ -65,7 +65,7 @@ const Content = () => {
 
     async function requestGetApi() {
         try {
-            const response = await axiosDeliveryCargoGetApi()
+            const response = await axiosDeliveryGetApi()
             if (response.data.result == true) {
                 setDeliveryCargoDtos(response.data.deliveryCargoDtos)
                 console.log(response.data.deliveryCargoDtos)

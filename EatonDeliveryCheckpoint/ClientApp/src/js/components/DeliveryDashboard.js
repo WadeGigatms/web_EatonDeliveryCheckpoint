@@ -4,36 +4,79 @@ import CargoContent from './CargoContent';
 import CargoDataContent from './CargoDataContent';
 import CargoDataInfoContent from './CargoDataInfoContent';
 import {
+    TITLE_DELIVERY,
     BTN_DELIVERY_READY,
     BTN_DELIVERY_START,
-    BTN_DELIVERY_RESTART,
     BTN_DELIVERY_FINISH,
     BTN_DELIVERY_QUIT,
-    BTN_DELIVERY_ALERT_DISMISS,
-    BTN_CANCEL
+    MESSAGE_INVALID_QTY,
+    MESSAGE_INVALID_PN,
+    MESSAGE_INVALID_ALERT,
+    MESSAGE_INVALID_ALERT_REMOVE,
+    MESSAGE_PAUSE,
+    MESSAGE_WINDOW_CLOSE,
+    BTN_CONFIRM,
+    BTN_CANCEL,
+    BTN_CONTINUE,
+    BTN_QUIT,
+    BTN_CLOSE,
+    BTN_FINISH
 } from '../constants';
 import MuiConfirmDialog from "./MuiConfirmDialog";
 import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
-import { axiosDeliveryCargoStartPostApi, axiosDeliveryCargoFinishPostApi } from '../axios/Axios';
+import { axiosDeliveryStartPostApi, axiosDeliveryFinishPostApi, axiosDeliveryDismissAlertPostApi, axiosDeliveryQuitPostApi } from '../axios/Axios';
 
 const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos, requestGetApi }) => {
-    const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: alert
+    const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
     const [selectedDeliveryCargoDto, setSelectedDeliveryCargoDto] = useState(null)
     const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
     const [finishAlertOpen, setFinishAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
-    const [invalidPalletAlertOpen, setInvalidPalletAlertOpen] = useState(false)
+    const [invalidMaterialAlertOpen, setInvalidMaterialAlertOpen] = useState(false)
+    const [invalidQtyAlertOpen, setInvalidQtyAlertOpen] = useState(false)
+    const [pauseAlertOpen, setPauseAlertOpen] = useState(false)
+    const [windowCloseAlertOpen, setWindowCloseAlertOpen] = useState(false)
+
+    useEffect(() => {
+        const handleWindowClose = () => {
+            setWindowCloseAlertOpen(true)
+        }
+
+        window.addEventListener("beforeunload", handleWindowClose)
+
+        return () => {
+            window.removeEventListener("beforeunload", handleWindowClose)
+        }
+    }, [])
 
     useEffect(() => {
         if (deliveryCargoDtos) {
             const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
-            if (deliveryingCargoDto === null || deliveryingCargoDto === undefined) { return }
-            setSelectedDeliveryCargoDto(deliveryingCargoDto)
-            console.log(deliveryingCargoDto)
+            if (deliveryingCargoDto === null || deliveryingCargoDto === undefined) {
+                return
+            } else {
+                if (deliveryStep === 0) {
+                    setPauseAlertOpen(true)
+                } else if (deliveryStep === 2) {
+                    setSelectedDeliveryCargoDto(deliveryingCargoDto)
+                }
+            }
         }
     }, [deliveryCargoDtos])
+
+    useEffect(() => {
+        if (selectedDeliveryCargoDto) {
+            const invalidMaterialDataDto = selectedDeliveryCargoDto.datas.find((data) => data.count === -1 && data.alert === 1)
+            const invalidQtyDataDto = selectedDeliveryCargoDto.datas.find((data) => data.count < data.realtime_product_count && data.alert === 1)
+            if (invalidMaterialDataDto) {
+                setInvalidMaterialAlertOpen(true)
+            } else if (invalidQtyDataDto) {
+                setInvalidQtyAlertOpen(true)
+            }
+        }
+    }, [selectedDeliveryCargoDto])
 
     const handlePrimaryButtonClick = (e) => {
         if (deliveryStep === 1 && selectedDeliveryCargoDto === null) {
@@ -57,7 +100,10 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
             case 2: {
                 var count = 0
                 for (var i = 0; i < selectedDeliveryCargoDto.datas.length; i++) {
-                    count += selectedDeliveryCargoDto.datas[i]
+                    var data = selectedDeliveryCargoDto.datas[i]
+                    if (data.count > -1) {
+                        count += data.count
+                    }
                 }
                 if (count === selectedDeliveryCargoDto.product_quantity) {
                     setFinishAlertOpen(true)
@@ -67,7 +113,7 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
                 break;
             }
             case 3: {
-
+                setDeliveryStep(0)
                 break;
             }
         }
@@ -90,7 +136,7 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
                 return BTN_DELIVERY_FINISH;
             }
             case 3: {
-                return BTN_DELIVERY_RESTART;
+                return BTN_FINISH;
             }
             default: {
                 return "";
@@ -122,23 +168,86 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
         requestFinishPostApi()
     }
 
+    const handleDismissAlertClick = () => {
+        setInvalidMaterialAlertOpen(false)
+        setInvalidQtyAlertOpen(false)
+        requestDismissAlertPostApi()
+    }
+
+    const handleQuitPauseButtonClick = () => {
+        setPauseAlertOpen(false)
+        setDeliveryStep(1)
+        requestQuitPostApi()
+    }
+
+    const handleContinueButtonClick = () => {
+        setPauseAlertOpen(false)
+        setDeliveryStep(2)
+        if (deliveryCargoDtos) {
+            const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
+            setSelectedDeliveryCargoDto(deliveryingCargoDto)
+        }
+    }
+
+    const handleWindowCloseClick = () => {
+        requestQuitPostApi()
+        setWindowCloseAlertOpen(false)
+        window.close()
+    }
+
     function isDisabled(deliveryStage) {
-        if ((deliveryStage === 0 && deliveryCargoDtos !== null) ||
-            (deliveryStage === 1 && selectedDeliveryCargoDto !== null) ||
-            (deliveryStage === 2)) {
+        if (deliveryStage === 0 && deliveryCargoDtos) {
+            if (deliveryCargoDtos.length > 0) {
+                return false
+            }
+        } else if (deliveryStage === 1 && selectedDeliveryCargoDto) {
+            return false
+        } else if (deliveryStage === 2) {
             return false
         }
         return true
+    }
+
+    async function requestQuitPostApi() {
+        setLoadingAlertOpen(true)
+        try {
+            if (deliveryCargoDtos) {
+                const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
+                const json = JSON.stringify(deliveryingCargoDto)
+                const response = await axiosDeliveryQuitPostApi(json)
+                if (response.data.result === true) {
+                    requestGetApi()
+                }
+            }
+        } catch (error) {
+            console.log("requestQuitPostApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
+    }
+
+    async function requestDismissAlertPostApi() {
+        setLoadingAlertOpen(true)
+        try {
+            const json = JSON.stringify(selectedDeliveryCargoDto)
+            const response = await axiosDeliveryDismissAlertPostApi(json)
+            if (response.data.result === true) {
+                requestGetApi()
+            }
+        } catch (error) {
+            console.log("requestDismissAlertPostApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
     }
 
     async function requestStartPostApi() {
         setLoadingAlertOpen(true)
         try {
             const json = JSON.stringify(selectedDeliveryCargoDto)
-            const response = await axiosDeliveryCargoStartPostApi(json)
+            const response = await axiosDeliveryStartPostApi(json)
             if (response.data.result === true) {
                 requestGetApi()
-                console.log("requestStartPostApi OK")
             }
         } catch (error) {
             console.log("requestStartPostApi error")
@@ -151,10 +260,9 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
         setLoadingAlertOpen(true)
         try {
             const json = JSON.stringify(selectedDeliveryCargoDto)
-            const response = await axiosDeliveryCargoFinishPostApi(json)
+            const response = await axiosDeliveryFinishPostApi(json)
             if (response.data.result === true) {
                 requestGetApi()
-                console.log("requestFinishPostApi OK")
             }
         } catch (error) {
             console.log("requestFinishPostApi error")
@@ -187,22 +295,61 @@ const DeliveryDashboard = ({ deliveryState, setDeliveryState, deliveryCargoDtos,
         </div>
         <MuiConfirmDialog
             open={confirmAlertOpen}
-            title={BTN_DELIVERY_START}
+            onClose={handleCancelButtonClick}
+            title={TITLE_DELIVERY}
             contentText={BTN_DELIVERY_START}
+            primaryButton={BTN_CONFIRM}
+            secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
         <MuiConfirmDialog
             open={quitAlertOpen}
-            title={BTN_DELIVERY_QUIT}
+            onClose={handleCancelButtonClick}
+            title={TITLE_DELIVERY}
             contentText={BTN_DELIVERY_QUIT}
+            primaryButton={BTN_CONFIRM}
+            secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleQuitButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
+        <MuiConfirmDialog
+            open={pauseAlertOpen}
+            onClose={null}
+            title={TITLE_DELIVERY}
+            contentText={MESSAGE_PAUSE}
+            primaryButton={BTN_CONTINUE}
+            secondaryButton={BTN_QUIT}
+            handlePrimaryButtonClick={handleContinueButtonClick}
+            handleSecondaryButtonClick={handleQuitPauseButtonClick} />
+        <MuiConfirmDialog
+            open={windowCloseAlertOpen}
+            onClose={() => setWindowCloseAlertOpen(false)}
+            title={TITLE_DELIVERY}
+            contentText={MESSAGE_WINDOW_CLOSE}
+            primaryButton={BTN_CONTINUE}
+            secondaryButton={BTN_CLOSE}
+            handlePrimaryButtonClick={() => setWindowCloseAlertOpen(false)}
+            handleSecondaryButtonClick={handleWindowCloseClick} />
         <MuiAlertDialog
             severity={"success"}
             open={finishAlertOpen}
+            onClose={null}
             title={BTN_DELIVERY_FINISH}
             contentText={BTN_DELIVERY_FINISH}
             handleButtonClick={handleFinishButtonClick} />
+        <MuiAlertDialog
+            severity={"error"}
+            open={invalidMaterialAlertOpen}
+            onClose={null}
+            title={MESSAGE_INVALID_ALERT}
+            contentText={MESSAGE_INVALID_PN + MESSAGE_INVALID_ALERT_REMOVE}
+            handleButtonClick={handleDismissAlertClick} />
+        <MuiAlertDialog
+            severity={"error"}
+            open={invalidQtyAlertOpen}
+            onClose={null}
+            title={MESSAGE_INVALID_ALERT}
+            contentText={MESSAGE_INVALID_QTY + MESSAGE_INVALID_ALERT_REMOVE}
+            handleButtonClick={handleDismissAlertClick} />
         <MuiProgress open={loadingAlertOpen} />
     </div>
 }

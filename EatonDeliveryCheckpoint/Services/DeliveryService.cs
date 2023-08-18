@@ -62,13 +62,49 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Save to cache
+            DeliveryCargoDto deliveryingCargoDto = deliveryCargoDtos.Where(dto => dto.state == 1).FirstOrDefault();
+            if (deliveryingCargoDto != null)
+            {
+                _localMemoryCache.SaveDeliveryingCargoDto(deliveryingCargoDto);
+            }
             _localMemoryCache.SaveDeliveryCargoDtos(deliveryCargoDtos);
             _localMemoryCache.SaveCacheDidChange(false);
 
             return GetDeliveryCargoResultDto(ResultEnum.True, ErrorEnum.None, deliveryCargoDtos);
         }
 
-        public IResultDto PostToCancelAlert(dynamic value)
+        public ResultDto PostToQuit(dynamic value)
+        {
+            DeliveryCargoDto dto;
+            bool result;
+
+            // Check value
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                dto = JsonConvert.DeserializeObject<DeliveryCargoDto>(value.ToString(), settings);
+            }
+            catch (Exception exp)
+            {
+                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+            }
+
+            // Update deliveryingCargoDto and deliveryCargoDtos in cache
+
+            // Update database
+            DeliveryCargoContext quitDeliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(dto.no);
+            result = _connection.UpdateDeliveryCargoContextWhenQuit(quitDeliveryCargoContext);
+
+            _localMemoryCache.SaveCacheDidChange(true);
+
+            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+        }
+
+        public IResultDto PostToDismissAlert(dynamic value)
         {
             DeliveryCargoDto dto;
             bool result;
@@ -90,7 +126,7 @@ namespace EatonDeliveryCheckpoint.Services
 
             // Any available deliveryingCargoDto in cache
             DeliveryCargoDto deliveryingCargoDto = _localMemoryCache.ReadDeliveryingCargoDto();
-            if (deliveryingCargoDto == null)
+            if (deliveryingCargoDto == null && deliveryingCargoDto.no != dto.no)
             {
                 // Get DeliveryingCargoDto from database
                 deliveryingCargoDto = _connection.QueryDeliveryCargoDtosWithState(0).FirstOrDefault();
@@ -114,7 +150,8 @@ namespace EatonDeliveryCheckpoint.Services
             DeliveryCargoDataDto alertDeliveryCargoDataDto = deliveryingCargoDto.datas.Where(data => data.alert == 1).FirstOrDefault();
             if (alertDeliveryCargoDataDto != null)
             {
-                if (alertDeliveryCargoDataDto.count < alertDeliveryCargoDataDto.realtime_product_count)
+                if (alertDeliveryCargoDataDto.count > -1 &&
+                    alertDeliveryCargoDataDto.count < alertDeliveryCargoDataDto.realtime_product_count)
                 {
                     // Over qty
                     UpdateDeliveryCargoDataDtoToRemoveInvalidQty(ref deliveryingCargoDto, alertDeliveryCargoDataDto);
@@ -125,7 +162,8 @@ namespace EatonDeliveryCheckpoint.Services
                     _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
 
                     // Update database
-                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(alertDeliveryCargoDataDto.material);
+                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(deliveryingCargoDto.no);
+                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryCargoContext.id, alertDeliveryCargoDataDto.material);
                     int qty = _connection.QueryQtyByCargoDataRecordContextWithInfoIds(cargoDataInfoContext.f_delivery_cargo_id, cargoDataInfoContext.id);
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext, qty);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
@@ -141,10 +179,15 @@ namespace EatonDeliveryCheckpoint.Services
                     _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
 
                     // Update database
-                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(alertDeliveryCargoDataDto.material);
+                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(deliveryingCargoDto.no);
+                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryCargoContext.id, alertDeliveryCargoDataDto.material);
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
                 }
+            } 
+            else
+            {
+
             }
 
             // Dismiss alert trigger
@@ -153,18 +196,6 @@ namespace EatonDeliveryCheckpoint.Services
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
-        }
-
-        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext)
-        {
-            cargoDataInfoContext.alert = 0;
-        }
-
-        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext, int qty)
-        {
-            cargoDataInfoContext.realtime_product_count -= qty;
-            cargoDataInfoContext.realtime_pallet_count -= 1;
-            cargoDataInfoContext.alert = 0;
         }
 
         public IResultDto PostFromEpcServer(dynamic value)
@@ -228,12 +259,11 @@ namespace EatonDeliveryCheckpoint.Services
                     _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
 
                     // Update database
-                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(dto.pn);
-
-                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithId(cargoDataInfoContext.f_delivery_cargo_id);
+                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(deliveryingCargoDto.no);
                     deliveryCargoContext.invalid_pallet_quantity += 1;
                     result = _connection.UpdateDeliveryCargoContextWhenDataInserted(deliveryCargoContext);
 
+                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryCargoContext.id, dto.pn);
                     UpdateCargoDataInfoContextForRealtimeWithInvalidData(ref cargoDataInfoContext, dto.qty);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
 
@@ -254,12 +284,11 @@ namespace EatonDeliveryCheckpoint.Services
                     _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
 
                     // Update database
-                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(dto.pn);
-
-                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithId(cargoDataInfoContext.f_delivery_cargo_id);
+                    DeliveryCargoContext deliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(deliveryingCargoDto.no);
                     deliveryCargoContext.valid_pallet_quantity += 1;
                     result = _connection.UpdateDeliveryCargoContextWhenDataInserted(deliveryCargoContext);
 
+                    CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryCargoContext.id, dto.pn);
                     UpdateCargoDataInfoContextForRealtime(ref cargoDataInfoContext, dto.qty);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
 
@@ -269,6 +298,8 @@ namespace EatonDeliveryCheckpoint.Services
             } 
             else
             {
+                // Invalid material
+
                 // [ERROR]
                 // Update deliveryingCargoDto and deliveryCargoDtos in cache
                 UpdateDeliveryCargoDtoWithInvalidPallet(ref deliveryingCargoDto);
@@ -641,6 +672,7 @@ namespace EatonDeliveryCheckpoint.Services
                 count = -1,
                 realtime_product_count = postDto.qty,
                 realtime_pallet_count = 1,
+                alert = 1
             });
         }
 
@@ -677,6 +709,18 @@ namespace EatonDeliveryCheckpoint.Services
             var replaceDto = deliveryCargoDtos.FirstOrDefault(d => d.no == dto.no);
             replaceDto = dto;
             return deliveryCargoDtos;
+        }
+
+        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext)
+        {
+            cargoDataInfoContext.alert = 0;
+        }
+
+        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext, int qty)
+        {
+            cargoDataInfoContext.realtime_product_count -= qty;
+            cargoDataInfoContext.realtime_pallet_count -= 1;
+            cargoDataInfoContext.alert = 0;
         }
 
         #endregion

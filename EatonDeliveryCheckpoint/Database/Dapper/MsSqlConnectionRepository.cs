@@ -176,18 +176,19 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public CargoDataInfoContext QueryCargoDataInfoContextWithMaterial(string material)
+        public CargoDataInfoContext QueryCargoDataInfoContextWithMaterial(int f_delivery_cargo_id, string material)
         {
             try
             {
                 var sql = @"SELECT * FROM [scannel].[dbo].[eaton_cargo_data_info] 
-                            WHERE material=@material ";
+                            WHERE f_delivery_cargo_id=@f_delivery_cargo_id AND material=@material ";
                 return _connection.Query<CargoDataInfoContext>(sql, new
                 {
+                    f_delivery_cargo_id = f_delivery_cargo_id,
                     material = material,
                 }).FirstOrDefault();
             }
-            catch
+            catch (Exception exp)
             {
                 return null;
             }
@@ -573,12 +574,32 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
+        public bool UpdateDeliveryCargoContextWhenQuit(DeliveryCargoContext context)
+        {
+            try
+            {
+                var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_cargo] 
+                            SET end_time=@end_time, state=@state 
+                            WHERE id=@id ";
+                return _connection.Execute(sql, new
+                {
+                    id = context.id,
+                    end_time = context.end_time,
+                    state = context.state,
+                }) > 0;
+            }
+            catch (Exception exp)
+            {
+                return false;
+            }
+        }
+
         public bool UpdateCargoDataInfoContext(CargoDataInfoContext context)
         {
             try
             {
                 var sql = @"UPDATE [scannel].[dbo].[eaton_cargo_data_info] 
-                            SET realtime_product_count=@realtime_product_count, realtime_pallet_count=@realtime_pallet_count, alert@=alert 
+                            SET realtime_product_count=@realtime_product_count, realtime_pallet_count=@realtime_pallet_count, alert=@alert 
                             WHERE id=@id ";
                 return _connection.Execute(sql, new
                 {
