@@ -17,11 +17,19 @@ namespace EatonDeliveryCheckpoint.Controllers
 
         private readonly DeliveryService _service;
 
-        // GET api/<DeliveryController>/cargo
+        // GET api/<DeliveryController>/dnlist
         [HttpGet("dnlist")]
         public IActionResult GetDnList()
         {
             DeliveryCargoResultDto dto = (DeliveryCargoResultDto)_service.GetDnList();
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // GET api/<DeliveryController>/search
+        [HttpGet("search")]
+        public IActionResult GetReview([FromQuery] string no)
+        {
+            DeliveryCargoResultDto dto = (DeliveryCargoResultDto)_service.GetSearch(no);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 

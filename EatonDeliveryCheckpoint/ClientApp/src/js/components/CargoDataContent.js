@@ -35,20 +35,21 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
                         {
                             selectedDeliveryCargoDto ? selectedDeliveryCargoDto.datas.map((row, index) => {
                                 var classname = ""
-                                if (row.count === row.realtime_product_count) {
-                                    classname = "lightgreen"
-                                } else if (row.count < row.realtime_product_count) {
+                                // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
+                                if (row.alert === 1) {
                                     classname = "red"
+                                } else if (row.count === row.realtime_product_count) {
+                                    classname = "lightgreen"
+                                }
 
-                                    if (row.alert === 0) {
-                                        return <></>
-                                    }
+                                if (deliveryStep === 2 && row.count == row.realtime_product_count) {
+                                    return <></>
                                 }
 
                                 return (
                                     <TableRow
                                         sx={{ backgroundColor: classname }}
-                                        key={index} color="">
+                                        key={index}>
                                         <TableCell>{row.material}</TableCell>
                                         <TableCell align="right">{row.count}</TableCell>
                                         <TableCell align="right">{deliveryStep > 1 ? row.realtime_product_count : "-"}</TableCell>

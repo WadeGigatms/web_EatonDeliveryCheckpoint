@@ -50,14 +50,14 @@ const Content = () => {
         switch (contentState) {
             case 0:
                 return <DeliveryDashboard
-                    deliveryState={deliveryState}
                     setDeliveryState={setDeliveryState}
                     deliveryCargoDtos={deliveryCargoDtos}
                     requestGetApi={requestGetApi}/>
             case 1:
                 return <UploadDashboard deliveryCargoDtos={deliveryCargoDtos} />
             case 2:
-                return <SearchDashboard />
+                return <SearchDashboard
+                    deliveryCargoDtos={deliveryCargoDtos}/>
             default:
                 return <></>
         }
@@ -68,9 +68,9 @@ const Content = () => {
             const response = await axiosDeliveryGetApi()
             if (response.data.result == true) {
                 setDeliveryCargoDtos(response.data.deliveryCargoDtos)
-                console.log(response.data.deliveryCargoDtos)
             }
         } catch (error) {
+            console.log("requestGetApi error")
             console.log(error)
         }
     }

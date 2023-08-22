@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     TableContainer,
     Table,
@@ -16,8 +16,16 @@ import {
     TABLE_PRODUCT_QTY,
 } from '../constants'
 
-const CargoContent = ({ deliveryStep, deliveryCargoDtos, setSelectedDeliveryCargoDto }) => {
+const CargoContent = ({ deliveryStep, deliveryCargoDtos, selectedDeliveryCargoDto, setSelectedDeliveryCargoDto }) => {
     const [selectedNo, setSelectedNo] = useState("")
+
+    useEffect(() => {
+        if (selectedDeliveryCargoDto) {
+            setSelectedNo(selectedDeliveryCargoDto.no)
+        } else {
+            setSelectedNo("")
+        }
+    }, [selectedDeliveryCargoDto])
 
     const handleTableRowClick = (e, index, no) => {
         if (deliveryStep === 1) {

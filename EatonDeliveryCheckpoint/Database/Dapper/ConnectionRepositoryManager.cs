@@ -48,17 +48,20 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public CargoDataInfoContext QueryCargoDataInfoContextWithInvalidContext(CargoDataInfoContext context)
             => MsSqlConnectionRepository.QueryCargoDataInfoContextWithInvalidContext(context);
 
-        public CargoDataInfoContext QueryCargoDataInfoContextWithInvalidNo(string no)
-            => MsSqlConnectionRepository.QueryCargoDataInfoContextWithInvalidNo(no);
-
-        public DeliveryCargoContext QueryDeliveryCargoContextWithId(int id)
-            => MsSqlConnectionRepository.QueryDeliveryCargoContextWithId(id);
-
         public DeliveryCargoContext QueryDeliveryCargoContextWithNo(string no)
             => MsSqlConnectionRepository.QueryDeliveryCargoContextWithNo(no);
 
         public int QueryQtyByCargoDataRecordContextWithInfoIds(int cargo_id, int info_id)
             => MsSqlConnectionRepository.QueryQtyByCargoDataRecordContextWithInfoIds(cargo_id, info_id);
+
+        public DeliveryCargoDto QueryDeliveryCargoDtoWithNo(string no)
+            => MsSqlConnectionRepository.QueryDeliveryCargoDtoWithNo(no);
+
+        public List<DeliveryCargoDataDto> QueryValidDeliveryCargoDataDtos(string no)
+            => MsSqlConnectionRepository.QueryValidDeliveryCargoDataDtos(no);
+
+        public List<DeliveryCargoDataDto> QueryInvalidDeliveryCargoDataDtos(string no)
+            => MsSqlConnectionRepository.QueryInvalidDeliveryCargoDataDtos(no);
 
         #endregion
 
@@ -94,9 +97,6 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         public bool UpdateDeliveryCargoContextWhenDataInserted(DeliveryCargoContext context)
             => MsSqlConnectionRepository.UpdateDeliveryCargoContextWhenDataInserted(context);
-
-        public bool UpdateDeliveryCargoContextWhenQuit(DeliveryCargoContext context)
-            => MsSqlConnectionRepository.UpdateDeliveryCargoContextWhenQuit(context);
 
         public bool UpdateCargoDataInfoContext(CargoDataInfoContext context)
             => MsSqlConnectionRepository.UpdateCargoDataInfoContext(context);

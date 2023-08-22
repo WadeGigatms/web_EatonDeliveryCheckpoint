@@ -2,6 +2,11 @@
 import { Stack, Button, TextField } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import * as XLSX from 'xlsx';
+import CargoContent from './CargoContent';
+import UploadPreviewContent from './UploadPreviewContent';
+import MuiConfirmDialog from "./MuiConfirmDialog";
+import MuiAlertDialog from "./MuiAlertDialog";
+import MuiProgress from "./MuiProgress";
 import {
     MESSAGE_ERROR_FILE_TYPE,
     MESSAGE_ERROR_FILE_EMPTY,
@@ -14,11 +19,6 @@ import {
     TABLE_UPLOAD_FILE,
 } from '../constants';
 import { axiosDeliveryUploadPostApi } from '../axios/Axios';
-import CargoContent from './CargoContent';
-import UploadPreviewContent from './UploadPreviewContent';
-import MuiConfirmDialog from "./MuiConfirmDialog";
-import MuiAlertDialog from "./MuiAlertDialog";
-import MuiProgress from "./MuiProgress";
 
 const UploadDashboard = ({ deliveryCargoDtos }) => {
     const [file, setFile] = useState(null)
@@ -155,7 +155,9 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
             <CargoContent
+                deliveryStep={0}
                 deliveryCargoDtos={deliveryCargoDtos}
+                selectedDeliveryCargoDto={null}
                 setSelectedDeliveryCargoDtos={null} />
         </div>
         <div className="col-sm-6 h-100">

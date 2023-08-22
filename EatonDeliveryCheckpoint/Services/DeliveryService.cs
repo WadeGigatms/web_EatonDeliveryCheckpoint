@@ -29,6 +29,43 @@ namespace EatonDeliveryCheckpoint.Services
 
         #region Public methods
 
+        public DeliveryCargoResultDto GetSearch(string no)
+        {
+            // Check value
+            if (string.IsNullOrEmpty(no))
+            {
+                return GetDeliveryCargoResultDto(ResultEnum.False, ErrorEnum.InvalidProperties, null);
+            }
+
+            DeliveryCargoDto deliveryCargoDto = _connection.QueryDeliveryCargoDtoWithNo(no);
+            if (deliveryCargoDto == null)
+            {
+                return GetDeliveryCargoResultDto(ResultEnum.False, ErrorEnum.InvalidProperties, null);
+            }
+            deliveryCargoDto.datas = new List<DeliveryCargoDataDto>();
+            List<DeliveryCargoDataDto> validDeliveryCargoDataDtos = _connection.QueryValidDeliveryCargoDataDtos(no);
+            if (validDeliveryCargoDataDtos != null)
+            {
+                for(var i = 0; i < validDeliveryCargoDataDtos.Count(); i ++)
+                {
+                    deliveryCargoDto.datas.Add(validDeliveryCargoDataDtos[i]);
+                }
+            }
+            List<DeliveryCargoDataDto> invalidDeliveryCargoDataDtos = _connection.QueryInvalidDeliveryCargoDataDtos(no);
+            if (invalidDeliveryCargoDataDtos != null)
+            {
+                for (var i = 0; i < invalidDeliveryCargoDataDtos.Count(); i++)
+                {
+                    deliveryCargoDto.datas.Add(invalidDeliveryCargoDataDtos[i]);
+                }
+            }
+
+            List<DeliveryCargoDto> deliveryCargoDtos = new List<DeliveryCargoDto>();
+            deliveryCargoDtos.Add(deliveryCargoDto);
+
+            return GetDeliveryCargoResultDto(ResultEnum.True, ErrorEnum.None, deliveryCargoDtos);
+        }
+
         public IResultDto GetDnList()
         {
             // Examine for any changes
@@ -47,6 +84,7 @@ namespace EatonDeliveryCheckpoint.Services
             List<DeliveryCargoDto> deliveryCargoDtos = _connection.QueryDeliveryCargoDtos();
             if (deliveryCargoDtos == null)
             {
+                // No available data in database
                 return GetDeliveryCargoResultDto(ResultEnum.True, ErrorEnum.None, null);
             }
 
@@ -56,52 +94,26 @@ namespace EatonDeliveryCheckpoint.Services
                 List<DeliveryCargoDataDto> deliveryCargoDataDtos = _connection.QueryDeliveryCargoDataDtos(deliveryCargoDto.no);
                 if (deliveryCargoDataDtos == null)
                 {
-                    return GetDeliveryCargoResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase, null);
+                    // No available data in database
+                    return GetDeliveryCargoResultDto(ResultEnum.False, ErrorEnum.None, null);
                 }
                 deliveryCargoDto.datas = deliveryCargoDataDtos;
             }
 
-            // Save to cache
-            DeliveryCargoDto deliveryingCargoDto = deliveryCargoDtos.Where(dto => dto.state == 1).FirstOrDefault();
+            // Update cache
+            DeliveryCargoDto deliveryingCargoDto = deliveryCargoDtos.Where(dto => dto.state == 0).FirstOrDefault();
             if (deliveryingCargoDto != null)
             {
                 _localMemoryCache.SaveDeliveryingCargoDto(deliveryingCargoDto);
+            }
+            else
+            {
+                _localMemoryCache.DeleteDeliveryingCargoDto();
             }
             _localMemoryCache.SaveDeliveryCargoDtos(deliveryCargoDtos);
             _localMemoryCache.SaveCacheDidChange(false);
 
             return GetDeliveryCargoResultDto(ResultEnum.True, ErrorEnum.None, deliveryCargoDtos);
-        }
-
-        public ResultDto PostToQuit(dynamic value)
-        {
-            DeliveryCargoDto dto;
-            bool result;
-
-            // Check value
-            try
-            {
-                var settings = new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Include,
-                    MissingMemberHandling = MissingMemberHandling.Error
-                };
-                dto = JsonConvert.DeserializeObject<DeliveryCargoDto>(value.ToString(), settings);
-            }
-            catch (Exception exp)
-            {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
-            }
-
-            // Update deliveryingCargoDto and deliveryCargoDtos in cache
-
-            // Update database
-            DeliveryCargoContext quitDeliveryCargoContext = _connection.QueryDeliveryCargoContextWithNo(dto.no);
-            result = _connection.UpdateDeliveryCargoContextWhenQuit(quitDeliveryCargoContext);
-
-            _localMemoryCache.SaveCacheDidChange(true);
-
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public IResultDto PostToDismissAlert(dynamic value)
@@ -243,7 +255,7 @@ namespace EatonDeliveryCheckpoint.Services
 
             // Data received from epc server
             // Examine epc for valid or invalid
-            var matchedMaterialDeliveryCargoDataDto = deliveryingCargoDto.datas.Where(data => data.material == dto.pn).ToList().FirstOrDefault();
+            DeliveryCargoDataDto matchedMaterialDeliveryCargoDataDto = deliveryingCargoDto.datas.Where(data => data.material == dto.pn).ToList().FirstOrDefault();
             if (matchedMaterialDeliveryCargoDataDto != null) 
             {
                 // Valid material
@@ -349,7 +361,7 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
-            // Update [eaton_delivery_cargo]
+            // Update [eaton_delivery_cargo] in database
             UpdateDeliveryCargoDtoWhenStart(ref dto);
             result = _connection.UpdateDeliveryCargoContextWhenStart(dto);
             if (result == false)
@@ -358,9 +370,9 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Save to cache
-            _localMemoryCache.SaveDeliveryingCargoDto(dto);
-            List<DeliveryCargoDto> updatedDeliveryCargoDtos = UpdateCacheDeliveryCargoDtos(dto);
-            _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
+            // _localMemoryCache.SaveDeliveryingCargoDto(dto);
+            // List<DeliveryCargoDto> updatedDeliveryCargoDtos = UpdateCacheDeliveryCargoDtos(dto);
+            // _localMemoryCache.SaveDeliveryCargoDtos(updatedDeliveryCargoDtos);
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
@@ -386,7 +398,7 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
-            // Update [eaton_delivery_cargo]
+            // Update [eaton_delivery_cargo] in database
             UpdateDeliveryCargoDtoWhenFinish(ref dto);
             result = _connection.UpdateDeliveryCargoContextWhenFinish(dto);
             if (result == false)
@@ -395,7 +407,38 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Save to cache
-            _localMemoryCache.DeleteDeliveryingCargoDto();
+            // _localMemoryCache.DeleteDeliveryingCargoDto();
+            _localMemoryCache.SaveCacheDidChange(true);
+
+            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+        }
+
+        public ResultDto PostToQuit(dynamic value)
+        {
+            DeliveryCargoDto dto;
+            bool result;
+
+            // Check value
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                dto = JsonConvert.DeserializeObject<DeliveryCargoDto>(value.ToString(), settings);
+            }
+            catch (Exception exp)
+            {
+                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+            }
+
+            // Update database
+            UpdateDeliveryCargoDtoWhenFinish(ref dto);
+            result = _connection.UpdateDeliveryCargoContextWhenFinish(dto);
+
+            // Update cache
+            _localMemoryCache.SaveCacheDidChange(true);
 
             return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
         }
@@ -530,8 +573,8 @@ namespace EatonDeliveryCheckpoint.Services
                     no = file.First().No,
                     material_quantity = materialCount,
                     product_quantity = productCount,
-                    start_time = null,
-                    end_time = null,
+                    start_time = "",
+                    end_time = "",
                     valid_pallet_quantity = 0,
                     invalid_pallet_quantity = 0,
                     state = -1,
@@ -711,16 +754,16 @@ namespace EatonDeliveryCheckpoint.Services
             return deliveryCargoDtos;
         }
 
-        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext)
+        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext context)
         {
-            cargoDataInfoContext.alert = 0;
+            context.alert = 0;
         }
 
-        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext cargoDataInfoContext, int qty)
+        private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext context, int qty)
         {
-            cargoDataInfoContext.realtime_product_count -= qty;
-            cargoDataInfoContext.realtime_pallet_count -= 1;
-            cargoDataInfoContext.alert = 0;
+            context.realtime_product_count -= qty;
+            context.realtime_pallet_count -= 1;
+            context.alert = 0;
         }
 
         #endregion
