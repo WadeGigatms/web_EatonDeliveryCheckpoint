@@ -77,7 +77,13 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
             const workbook = XLSX.read(file, { type: 'buffer' })
             const worksheetName = workbook.SheetNames[0]
             const worksheet = workbook.Sheets[worksheetName]
+            worksheet.A1.w = "No"
+            worksheet.B1.w = "Delivery"
+            worksheet.C1.w = "Item"
+            worksheet.D1.w = "Material"
+            worksheet.E1.w = "Quantity"
             const data = XLSX.utils.sheet_to_json(worksheet)
+
             setFileData(data)
             setLoadingAlertOpen(false)
         } else {

@@ -71,7 +71,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 }
             }
         }
-    }, [deliveryCargoDtos])
+    }, [deliveryCargoDtos, deliveryStep])
 
     useEffect(() => {
         if (selectedDeliveryCargoDto) {
@@ -87,7 +87,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
         } else {
             setSelectedDeliveryCargoDto(null)
         }
-    }, [selectedDeliveryCargoDto])
+    }, [selectedDeliveryCargoDto, deliveryStep])
 
     const handlePrimaryButtonClick = (e) => {
         if (deliveryStep === 1 && selectedDeliveryCargoDto === null) {
@@ -109,6 +109,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 break;
             }
             case 2: {
+                // Examine finish or alert
                 if (didFinishDelivery(selectedDeliveryCargoDto)) {
                     setFinishAlertOpen(true)
                 } else {
@@ -117,9 +118,13 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 break;
             }
             case 3: {
+                // Move to step 0
                 setDeliveryStep(0)
                 setDeliveryState(0)
                 setSelectedDeliveryCargoDto(null)
+                break;
+            }
+            default: {
                 break;
             }
         }
@@ -210,10 +215,12 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             var realtimeCount = 0
             for (var i = 0; i < selectedDeliveryCargoDto.datas.length; i++) {
                 var data = selectedDeliveryCargoDto.datas[i]
-                if (data.count > -1) {
+                if (data.count > -1 && data.alert === 0) {
                     realtimeCount += data.realtime_product_count
                 }
             }
+            console.log(realtimeCount)
+            console.log(selectedDeliveryCargoDto.product_quantity)
             if (realtimeCount === selectedDeliveryCargoDto.product_quantity) {
                 return true
             } else {
@@ -245,9 +252,8 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             return "success"
         } else if (deliveryStep === 3) {
             return "success"
-        } else {
-            return "primary"
         }
+        return "primary"
     }
 
     async function requestQuitPostApi() {

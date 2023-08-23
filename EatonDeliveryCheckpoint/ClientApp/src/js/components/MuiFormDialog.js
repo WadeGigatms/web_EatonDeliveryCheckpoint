@@ -9,7 +9,7 @@ import {
     TextField
 } from '@mui/material';
 
-const MuiFormDialog = ({ open, onClose, value, onChange, title, contentText, primaryButton, secondaryButton, handlePrimaryButtonClick, handleSecondaryButtonClick }) => {
+const MuiFormDialog = ({ open, onClose, value, onChange, title, contentText, helperText, primaryButton, handlePrimaryButtonClick }) => {
 
     return <Dialog open={open} onClose={onClose} fullWidth={true} maxWidth="xs">
         <DialogTitle>{title}</DialogTitle>
@@ -21,12 +21,16 @@ const MuiFormDialog = ({ open, onClose, value, onChange, title, contentText, pri
                 fullWidth
                 label="DN"
                 variant="standard"
+                error={helperText === "" ? false : true}
+                helperText={helperText}
                 value={value}
                 onChange={onChange} />
         </DialogContent>
         <DialogActions>
-            <Button variant="contained" onClick={handlePrimaryButtonClick}>{primaryButton}</Button>
-            <Button variant="text" onClick={handleSecondaryButtonClick}>{secondaryButton}</Button>
+            <Button
+                fullWidth
+                variant="contained"
+                onClick={handlePrimaryButtonClick}>{primaryButton}</Button>
         </DialogActions>
     </Dialog>
 }

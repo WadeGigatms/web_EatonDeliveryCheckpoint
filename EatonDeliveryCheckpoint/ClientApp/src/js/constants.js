@@ -1,6 +1,6 @@
 ﻿export const VERSION = "v0.0.0";
 
-export const NAV_TITLE = "EATON 出貨系統";
+export const NAV_TITLE = "CHECKPOINT 出貨系統";
 export const NAV_HOME = "首頁";
 export const NAV_UPLOAD = "上傳";
 export const NAV_SEARCH = "查詢";
@@ -14,8 +14,8 @@ export const MESSAGE_INVALID_QTY = "超出目標出貨數量, ";
 export const MESSAGE_INVALID_ALERT = "出貨錯誤警示";
 export const MESSAGE_INVALID_ALERT_REMOVE = "請立即移除該棧板!";
 export const MESSAGE_PAUSE = "是否繼續未完成出貨作業?\n若放棄, 系統將刪除該筆出貨作業所有記錄";
-export const MESSAGE_WINDOW_CLOSE = "是否關閉網頁?\n若關閉, 系統將刪除該筆出貨作業所有記錄"
-export const MESSAGE_SEARCH_DN = "請輸入已出貨之貨櫃編碼"
+export const MESSAGE_WINDOW_CLOSE = "是否關閉網頁?\n若關閉, 系統將刪除該筆出貨作業所有記錄";
+export const MESSAGE_SEARCH_DN = "請輸入已出貨之貨櫃編碼";
 
 export const TITLE_DELIVERY = "出貨作業";
 
@@ -33,6 +33,7 @@ export const BTN_DELIVERY_FINISH = "完成出貨";
 export const BTN_DELIVERY_CONTINUE = "繼續出貨";
 export const BTN_DELIVERY_QUIT = "退出出貨";
 export const BTN_ALERT_DISMISS = "解除出貨警示";
+export const BTN_SEARCH = "查詢";
 
 export const TABLE_SEARCH = "查詢";
 export const TABLE_PREVIEW_FILE = "預覽檔案";

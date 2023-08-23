@@ -66,7 +66,7 @@ const Content = () => {
     async function requestGetApi() {
         try {
             const response = await axiosDeliveryGetApi()
-            if (response.data.result == true) {
+            if (response.data.result === true) {
                 setDeliveryCargoDtos(response.data.deliveryCargoDtos)
             }
         } catch (error) {

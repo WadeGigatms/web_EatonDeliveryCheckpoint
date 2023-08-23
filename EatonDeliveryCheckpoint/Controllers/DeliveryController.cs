@@ -29,7 +29,7 @@ namespace EatonDeliveryCheckpoint.Controllers
         [HttpGet("search")]
         public IActionResult GetReview([FromQuery] string no)
         {
-            DeliveryCargoResultDto dto = (DeliveryCargoResultDto)_service.GetSearch(no);
+            DeliveryCargoResultDto dto = _service.GetSearch(no);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 

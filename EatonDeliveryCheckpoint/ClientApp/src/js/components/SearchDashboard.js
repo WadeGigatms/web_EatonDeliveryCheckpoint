@@ -9,7 +9,8 @@ import {
     TABLE_SEARCH,
     MESSAGE_SEARCH_DN,
     BTN_CONFIRM,
-    BTN_CANCEL,
+    BTN_SEARCH,
+    BTN_PRINT
 } from '../constants';
 import { Stack, Button } from '@mui/material';
 import {
@@ -18,29 +19,33 @@ import {
 
 const SearchDashboard = ({ deliveryCargoDtos }) => {
     const [searchFormAlertOpen, setSearchFormAlertOpen] = useState(false)
-    const [inputErrorAlertOpen, setInputErrorAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
     const [selectedDeliveryCargoDto, setSelectedDeliveryCargoDto] = useState(null)
     const [value, setValue] = useState("")
+    const [helperText, setHelperText] = useState("")
 
     useEffect(() => {
         setSearchFormAlertOpen(true)
+        setValue("")
     }, [])
 
     const handleTextFieldChange = (e) => {
+        if (e.target.value !== "") {
+            setHelperText("")
+        } else {
+            setHelperText(MESSAGE_SEARCH_DN)
+        }
         setValue(e.target.value)
     }
 
     const handlePrimaryButtonClick = (e) => {
-        if (value === "") {
-            setInputErrorAlertOpen(true)
-        } else {
+        if (value !== "" && helperText === "") {
             setSearchFormAlertOpen(false)
             requestReviewGetApi()
         }
     }
 
-    const handleSecondaryButtonClick = (e) => {
+    const handlePrintButtonClick = (e) => {
 
     }
 
@@ -80,7 +85,7 @@ const SearchDashboard = ({ deliveryCargoDtos }) => {
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
                 <CargoDataInfoContent deliveryStep={3} selectedDeliveryCargoDto={selectedDeliveryCargoDto} className="h-100" />
-                <Button variant="contained" color="primary" size="large" onClick={() => setSearchFormAlertOpen(true)}>{TABLE_SEARCH}</Button>
+                <Button variant="contained" color="primary" size="large" onClick={() => setSearchFormAlertOpen(true)}>{BTN_SEARCH}</Button>
             </Stack>
         </div>
         <MuiFormDialog
@@ -90,10 +95,9 @@ const SearchDashboard = ({ deliveryCargoDtos }) => {
             onChange={handleTextFieldChange}
             title={TABLE_SEARCH}
             contentText={MESSAGE_SEARCH_DN}
+            helperText={helperText}
             primaryButton={BTN_CONFIRM}
-            secondaryButton={BTN_CANCEL}
-            handlePrimaryButtonClick={handlePrimaryButtonClick}
-            handleSecondaryButtonClick={handleSecondaryButtonClick} />
+            handlePrimaryButtonClick={handlePrimaryButtonClick} />
         <MuiProgress open={loadingAlertOpen} />
     </div>
 }
