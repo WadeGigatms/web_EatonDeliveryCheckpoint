@@ -26,14 +26,11 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
 
     useEffect(() => {
         setSearchFormAlertOpen(true)
-        setValue("")
     }, [])
 
     const handleTextFieldChange = (e) => {
         if (e.target.value !== "") {
             setHelperText("")
-        } else {
-            setHelperText(MESSAGE_SEARCH_DN)
         }
         setValue(e.target.value)
     }
@@ -41,12 +38,20 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
     const handlePrimaryButtonClick = (e) => {
         if (value !== "" && helperText === "") {
             setSearchFormAlertOpen(false)
+            setValue("")
+            setHelperText("")
             requestReviewGetApi()
         }
     }
 
     const handlePrintButtonClick = (e) => {
 
+    }
+
+    const handleCloseButtonClick = (e) => {
+        setSearchFormAlertOpen(false)
+        setValue("")
+        setHelperText("")
     }
 
     async function requestReviewGetApi() {
@@ -56,7 +61,6 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
             if (response.data.result === true) {
                 const deliveryNumberDtos = response.data.deliveryNumberDtos
                 if (deliveryNumberDtos != null) {
-                    console.log(response.data.deliveryCargoDtos[0])
                     setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
                 } else {
                     setSelectedDeliveryNumberDto(null)
@@ -90,7 +94,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
         </div>
         <MuiFormDialog
             open={searchFormAlertOpen}
-            onClose={() => setSearchFormAlertOpen(false)}
+            onClose={handleCloseButtonClick}
             value={value}
             onChange={handleTextFieldChange}
             title={TABLE_SEARCH}
