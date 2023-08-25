@@ -12,6 +12,7 @@ import {
     MESSAGE_ERROR_FILE_EMPTY,
     MESSAGE_ERROR_UPLOAD,
     MESSAGE_SUCCEED_UPLOAD,
+    MESSAGE_FILE_UPLOAD,
     BTN_CHOOSE_FILE,
     BTN_CONFIRM,
     BTN_CANCEL,
@@ -203,7 +204,7 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
             open={confirmAlertOpen}
             onClose={handleCancelButtonClick}
             title={TABLE_UPLOAD_FILE}
-            contentText={TABLE_UPLOAD_FILE}
+            contentText={MESSAGE_FILE_UPLOAD}
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmButtonClick}

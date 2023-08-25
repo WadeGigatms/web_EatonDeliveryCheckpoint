@@ -11,19 +11,19 @@ import {
     BTN_DELIVERY_READY,
     BTN_DELIVERY_START,
     BTN_DELIVERY_FINISH,
-    BTN_DELIVERY_QUIT,
     BTN_DELIVERY_CONTINUE,
     MESSAGE_INVALID_QTY,
     MESSAGE_INVALID_PN,
     MESSAGE_INVALID_ALERT,
     MESSAGE_INVALID_ALERT_REMOVE,
     MESSAGE_PAUSE,
-    MESSAGE_WINDOW_CLOSE,
+    MESSAGE_DELIVERY_FINISH,
+    MESSAGE_DELIVERY_START,
+    MESSAGE_DELIVERY_QUIT,
     BTN_CONFIRM,
     BTN_CANCEL,
     BTN_CONTINUE,
     BTN_QUIT,
-    BTN_CLOSE,
     BTN_FINISH
 } from '../constants';
 import {
@@ -44,19 +44,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     const [invalidMaterialAlertOpen, setInvalidMaterialAlertOpen] = useState(false)
     const [invalidQtyAlertOpen, setInvalidQtyAlertOpen] = useState(false)
     const [pauseAlertOpen, setPauseAlertOpen] = useState(false)
-    const [windowCloseAlertOpen, setWindowCloseAlertOpen] = useState(false)
-
-    useEffect(() => {
-        const handleWindowClose = () => {
-            setWindowCloseAlertOpen(true)
-        }
-
-        window.addEventListener("beforeunload", handleWindowClose)
-
-        return () => {
-            window.removeEventListener("beforeunload", handleWindowClose)
-        }
-    }, [])
+    const [pauseMessage, setPauseMessage] = useState("")
 
     useEffect(() => {
         if (deliveryCargoDtos) {
@@ -65,6 +53,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 return
             } else {
                 if (deliveryStep === 0) {
+                    setPauseMessage(deliveryingCargoDto.no + "出貨作業尚未完成! " + MESSAGE_PAUSE)
                     setPauseAlertOpen(true)
                 } else if (deliveryStep === 2) {
                     setSelectedDeliveryCargoDto(deliveryingCargoDto)
@@ -174,6 +163,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     const handleQuitButtonClick = () => {
         setQuitAlertOpen(false)
         setDeliveryStep(3)
+        requestQuitPostApi()
     }
 
     const handleFinishButtonClick = () => {
@@ -188,9 +178,10 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
         requestDismissAlertPostApi()
     }
 
-    const handleQuitPauseButtonClick = () => {
+    const handleQuitFromPauseButtonClick = () => {
         setPauseAlertOpen(false)
-        setDeliveryStep(1)
+        setPauseMessage("")
+        setDeliveryStep(3)
         requestQuitPostApi()
     }
 
@@ -204,12 +195,6 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
         }
     }
 
-    const handleWindowCloseClick = () => {
-        requestQuitPostApi()
-        setWindowCloseAlertOpen(false)
-        window.close()
-    }
-
     function didFinishDelivery(selectedDeliveryCargoDto) {
         if (selectedDeliveryCargoDto) {
             var realtimeCount = 0
@@ -219,8 +204,6 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                     realtimeCount += data.realtime_product_count
                 }
             }
-            console.log(realtimeCount)
-            console.log(selectedDeliveryCargoDto.product_quantity)
             if (realtimeCount === selectedDeliveryCargoDto.product_quantity) {
                 return true
             } else {
@@ -367,7 +350,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             open={startAlertOpen}
             onClose={handleCancelButtonClick}
             title={TITLE_DELIVERY}
-            contentText={BTN_DELIVERY_START}
+            contentText={MESSAGE_DELIVERY_START}
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleStartButtonClick}
@@ -376,7 +359,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             open={quitAlertOpen}
             onClose={handleCancelButtonClick}
             title={TITLE_DELIVERY}
-            contentText={BTN_DELIVERY_QUIT}
+            contentText={MESSAGE_DELIVERY_QUIT}
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleQuitButtonClick}
@@ -385,26 +368,17 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             open={pauseAlertOpen}
             onClose={null}
             title={TITLE_DELIVERY}
-            contentText={MESSAGE_PAUSE}
+            contentText={pauseMessage}
             primaryButton={BTN_CONTINUE}
             secondaryButton={BTN_QUIT}
             handlePrimaryButtonClick={handleContinueButtonClick}
-            handleSecondaryButtonClick={handleQuitPauseButtonClick} />
-        <MuiConfirmDialog
-            open={windowCloseAlertOpen}
-            onClose={() => setWindowCloseAlertOpen(false)}
-            title={TITLE_DELIVERY}
-            contentText={MESSAGE_WINDOW_CLOSE}
-            primaryButton={BTN_CONTINUE}
-            secondaryButton={BTN_CLOSE}
-            handlePrimaryButtonClick={() => setWindowCloseAlertOpen(false)}
-            handleSecondaryButtonClick={handleWindowCloseClick} />
+            handleSecondaryButtonClick={handleQuitFromPauseButtonClick} />
         <MuiAlertDialog
             severity={"success"}
             open={finishAlertOpen}
             onClose={null}
             title={BTN_DELIVERY_FINISH}
-            contentText={BTN_DELIVERY_FINISH}
+            contentText={MESSAGE_DELIVERY_FINISH}
             handleButtonClick={handleFinishButtonClick} />
         <MuiAlertDialog
             severity={"error"}

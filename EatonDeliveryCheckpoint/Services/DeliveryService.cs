@@ -601,28 +601,33 @@ namespace EatonDeliveryCheckpoint.Services
             return contexts;
         }
 
-        private List<CargoDataInfoContext> GetCargoDataInfoContexts(List<CargoDataContext> insertedCargoDataContexts)
+        private List<CargoDataInfoContext> GetCargoDataInfoContexts(List<CargoDataContext> contexts)
         {
-            List<CargoDataInfoContext> contexts = new List<CargoDataInfoContext>();
-            var groupedContexts = insertedCargoDataContexts.GroupBy(context => context.material).Select(context => new
+            List<CargoDataInfoContext> insertCargoDataInfoContext = new List<CargoDataInfoContext>();
+            var groupByCargoIdContexts = contexts.GroupBy(context => context.f_delivery_cargo_id).ToList();
+            foreach(var groupByCargoIdContext in groupByCargoIdContexts)
             {
-                f_delivery_cargo_id = context.Select(c => c.f_delivery_cargo_id).FirstOrDefault(),
-                material = context.Key,
-                count = context.Sum(d => d.quantity),
-            }).ToList();
-            foreach(var groupedContext in groupedContexts)
-            {
-                contexts.Add(new CargoDataInfoContext
+                var groupByMaterialContexts = groupByCargoIdContext.GroupBy(context => context.material).Select(context => new
                 {
-                    f_delivery_cargo_id = groupedContext.f_delivery_cargo_id,
-                    material = groupedContext.material,
-                    count = groupedContext.count,
-                    realtime_product_count = 0,
-                    realtime_pallet_count = 0,
-                    alert = 0,
+                    f_delivery_cargo_id = context.Select(c => c.f_delivery_cargo_id).FirstOrDefault(),
+                    material = context.Key,
+                    count = context.Sum(d => d.quantity),
                 });
+                foreach (var groupByMaterialContext in groupByMaterialContexts)
+                {
+                    insertCargoDataInfoContext.Add(new CargoDataInfoContext
+                    {
+                        f_delivery_cargo_id = groupByMaterialContext.f_delivery_cargo_id,
+                        material = groupByMaterialContext.material,
+                        count = groupByMaterialContext.count,
+                        realtime_product_count = 0,
+                        realtime_pallet_count = 0,
+                        alert = 0,
+                    });
+                }
             }
-            return contexts;
+
+            return insertCargoDataInfoContext;
         }
 
         private CargoDataInfoContext GetInvalidCargoDataInfoContext(DeliveryTerminalPostDto dto, int id)

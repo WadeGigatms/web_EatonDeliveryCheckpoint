@@ -1,10 +1,13 @@
 ﻿export const VERSION = "v0.0.0";
 
-export const NAV_TITLE = "CHECKPOINT 出貨系統";
+export const NAV_TITLE = "CHECKPOINT出貨系統";
 export const NAV_HOME = "首頁";
 export const NAV_UPLOAD = "上傳";
 export const NAV_SEARCH = "查詢";
 
+export const MESSAGE_FILE_UPLOAD = "進行上傳?";
+export const MESSAGE_DELIVERY_START = "開始出貨?";
+export const MESSAGE_DELIVERY_QUIT = "退出出貨?";
 export const MESSAGE_ERROR_FILE_TYPE = "錯誤檔案格式!請上傳Excel檔!";
 export const MESSAGE_ERROR_FILE_EMPTY = "無檔案";
 export const MESSAGE_ERROR_UPLOAD = "上傳失敗";
@@ -13,9 +16,10 @@ export const MESSAGE_INVALID_PN = "不符合目標出貨料號, ";
 export const MESSAGE_INVALID_QTY = "超出目標出貨數量, ";
 export const MESSAGE_INVALID_ALERT = "出貨錯誤警示";
 export const MESSAGE_INVALID_ALERT_REMOVE = "請立即移除該棧板!";
-export const MESSAGE_PAUSE = "是否繼續未完成出貨作業?\n若放棄, 系統將刪除該筆出貨作業所有記錄";
-export const MESSAGE_WINDOW_CLOSE = "是否關閉網頁?\n若關閉, 系統將刪除該筆出貨作業所有記錄";
+export const MESSAGE_PAUSE = "是否繼續未完成出貨作業? 若放棄, 系統將刪除該筆出貨作業所有記錄";
+export const MESSAGE_WINDOW_CLOSE = "是否關閉網頁? 若關閉, 系統將刪除該筆出貨作業所有記錄";
 export const MESSAGE_SEARCH_DN = "請輸入已出貨之貨櫃編碼";
+export const MESSAGE_DELIVERY_FINISH = "顯示該筆出貨所有資料";
 
 export const TITLE_DELIVERY = "出貨作業";
 

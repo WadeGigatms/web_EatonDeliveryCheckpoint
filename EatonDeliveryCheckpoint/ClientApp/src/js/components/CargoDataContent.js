@@ -35,14 +35,19 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
                         {
                             selectedDeliveryCargoDto ? selectedDeliveryCargoDto.datas.map((row, index) => {
                                 // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
+                                // Set classname
                                 var classname = ""
-                                if (row.alert === 1) {
-                                    classname = "red"
-                                } else if (row.count === row.realtime_product_count) {
-                                    classname = "lightgreen"
+                                if (deliveryStep === 2) {
+                                    if (row.alert === 1) {
+                                        classname = "lightcoral"
+                                    } else if (row.count === row.realtime_product_count) {
+                                        classname = "lime"
+                                    }
+                                } else if (deliveryStep === 3) {
+                                    classname = row.alert === 1 || row.count > row.realtime_product_count ? "lightcoral" : "lime"
                                 }
 
-                                // visible or not
+                                // Visible
                                 if (deliveryStep === 2 && row.alert === 0 && row.count === -1) {
                                     return <></>
                                 }
