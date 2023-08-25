@@ -34,9 +34,9 @@ import {
     axiosDeliverySearchGetApi
 } from '../axios/Axios';
 
-const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi }) => {
+const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi }) => {
     const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
-    const [selectedDeliveryCargoDto, setSelectedDeliveryCargoDto] = useState(null)
+    const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [startAlertOpen, setStartAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
     const [finishAlertOpen, setFinishAlertOpen] = useState(false)
@@ -47,25 +47,25 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     const [pauseMessage, setPauseMessage] = useState("")
 
     useEffect(() => {
-        if (deliveryCargoDtos) {
-            const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
-            if (deliveryingCargoDto === null || deliveryingCargoDto === undefined) {
+        if (deliveryNumberDtos) {
+            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
+            if (deliveryingNumberDto === null || deliveryingNumberDto === undefined) {
                 return
             } else {
                 if (deliveryStep === 0) {
-                    setPauseMessage(deliveryingCargoDto.no + "出貨作業尚未完成! " + MESSAGE_PAUSE)
+                    setPauseMessage(deliveryingNumberDto.no + "出貨作業尚未完成! " + MESSAGE_PAUSE)
                     setPauseAlertOpen(true)
                 } else if (deliveryStep === 2) {
-                    setSelectedDeliveryCargoDto(deliveryingCargoDto)
+                    setSelectedDeliveryNumberDto(deliveryingNumberDto)
                 }
             }
         }
-    }, [deliveryCargoDtos, deliveryStep])
+    }, [deliveryNumberDtos, deliveryStep])
 
     useEffect(() => {
-        if (selectedDeliveryCargoDto) {
-            const invalidMaterialDataDto = selectedDeliveryCargoDto.datas.find((data) => data.count === -1 && data.alert === 1)
-            const invalidQtyDataDto = selectedDeliveryCargoDto.datas.find((data) => data.count < data.realtime_product_count && data.alert === 1)
+        if (selectedDeliveryNumberDto) {
+            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count === -1 && data.alert === 1)
+            const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count < data.realtime_product_count && data.alert === 1)
             if (invalidMaterialDataDto && deliveryStep === 2) {
                 setInvalidMaterialAlertOpen(true)
             } else if (invalidQtyDataDto && deliveryStep === 2) {
@@ -74,12 +74,12 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 
             }
         } else {
-            setSelectedDeliveryCargoDto(null)
+            setSelectedDeliveryNumberDto(null)
         }
-    }, [selectedDeliveryCargoDto, deliveryStep])
+    }, [selectedDeliveryNumberDto, deliveryStep])
 
     const handlePrimaryButtonClick = (e) => {
-        if (deliveryStep === 1 && selectedDeliveryCargoDto === null) {
+        if (deliveryStep === 1 && selectedDeliveryNumberDto === null) {
             setDeliveryStep(0)
             return
         }
@@ -92,14 +92,14 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
             }
             case 1: {
                 // Stage 1 to 2
-                if (selectedDeliveryCargoDto) {
+                if (selectedDeliveryNumberDto) {
                     setStartAlertOpen(true)
                 }
                 break;
             }
             case 2: {
                 // Examine finish or alert
-                if (didFinishDelivery(selectedDeliveryCargoDto)) {
+                if (didFinishDelivery(selectedDeliveryNumberDto)) {
                     setFinishAlertOpen(true)
                 } else {
                     setQuitAlertOpen(true)
@@ -110,7 +110,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
                 // Move to step 0
                 setDeliveryStep(0)
                 setDeliveryState(0)
-                setSelectedDeliveryCargoDto(null)
+                setSelectedDeliveryNumberDto(null)
                 break;
             }
             default: {
@@ -121,7 +121,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
 
     const handleSecondaryButtonClick = (e) => {
         setDeliveryStep(0)
-        setSelectedDeliveryCargoDto(null)
+        setSelectedDeliveryNumberDto(null)
     }
 
     const renderButton = (deliveryStage) => {
@@ -189,9 +189,9 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
         setPauseAlertOpen(false)
         setDeliveryStep(2)
         setDeliveryState(1)
-        if (deliveryCargoDtos) {
-            const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
-            setSelectedDeliveryCargoDto(deliveryingCargoDto)
+        if (deliveryNumberDtos) {
+            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
+            setSelectedDeliveryNumberDto(deliveryingNumberDto)
         }
     }
 
@@ -214,11 +214,11 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     }
 
     function isDisabled(deliveryStage) {
-        if (deliveryStage === 0 && deliveryCargoDtos) {
-            if (deliveryCargoDtos.length > 0) {
+        if (deliveryStage === 0 && deliveryNumberDtos) {
+            if (deliveryNumberDtos.length > 0) {
                 return false
             }
-        } else if (deliveryStage === 1 && selectedDeliveryCargoDto) {
+        } else if (deliveryStage === 1 && selectedDeliveryNumberDto) {
             return false
         } else if (deliveryStage === 2) {
             return false
@@ -231,7 +231,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     function handlePrimaryButtonColor(deliveryStep) {
         if (deliveryStep === -1) {
             return "warning"
-        } else if (deliveryStep === 2 && didFinishDelivery(selectedDeliveryCargoDto) === true) {
+        } else if (deliveryStep === 2 && didFinishDelivery(selectedDeliveryNumberDto) === true) {
             return "success"
         } else if (deliveryStep === 3) {
             return "success"
@@ -242,12 +242,12 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     async function requestQuitPostApi() {
         setLoadingAlertOpen(true)
         try {
-            if (deliveryCargoDtos) {
-                const deliveryingCargoDto = deliveryCargoDtos.find((dto) => dto.state === 0)
-                const json = JSON.stringify(deliveryingCargoDto)
+            if (deliveryNumberDtos) {
+                const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
+                const json = JSON.stringify(deliveryingNumberDto)
                 const response = await axiosDeliveryQuitPostApi(json)
                 if (response.data.result === true) {
-                    requestReviewGetApi(deliveryingCargoDto.no)
+                    requestReviewGetApi(deliveryingNumberDto.no)
                     requestGetApi()
                 }
             }
@@ -261,7 +261,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     async function requestDismissAlertPostApi() {
         setLoadingAlertOpen(true)
         try {
-            const json = JSON.stringify(selectedDeliveryCargoDto)
+            const json = JSON.stringify(selectedDeliveryNumberDto)
             const response = await axiosDeliveryDismissAlertPostApi(json)
             if (response.data.result === true) {
                 requestGetApi()
@@ -276,7 +276,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     async function requestStartPostApi() {
         setLoadingAlertOpen(true)
         try {
-            const json = JSON.stringify(selectedDeliveryCargoDto)
+            const json = JSON.stringify(selectedDeliveryNumberDto)
             const response = await axiosDeliveryStartPostApi(json)
             if (response.data.result === true) {
                 requestGetApi()
@@ -291,7 +291,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     async function requestFinishPostApi() {
         setLoadingAlertOpen(true)
         try {
-            const json = JSON.stringify(selectedDeliveryCargoDto)
+            const json = JSON.stringify(selectedDeliveryNumberDto)
             const response = await axiosDeliveryFinishPostApi(json)
             if (response.data.result === true) {
                 requestReviewGetApi()
@@ -306,14 +306,13 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
     async function requestReviewGetApi() {
         setLoadingAlertOpen(true)
         try {
-            const response = await axiosDeliverySearchGetApi(selectedDeliveryCargoDto.no)
+            const response = await axiosDeliverySearchGetApi(selectedDeliveryNumberDto.no)
             if (response.data.result === true) {
-                const deliveryCargoDtos = response.data.deliveryCargoDtos
-                if (deliveryCargoDtos != null) {
-                    console.log(response.data.deliveryCargoDtos[0])
-                    setSelectedDeliveryCargoDto(deliveryCargoDtos[0])
+                const deliveryNumberDtos = response.data.deliveryNumberDtos
+                if (deliveryNumberDtos != null) {
+                    setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
                 } else {
-                    setSelectedDeliveryCargoDto(null)
+                    setSelectedDeliveryNumberDto(null)
                 }
             }
         } catch (error) {
@@ -327,22 +326,31 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryCargoDtos, requestGetApi 
         <div className="col-sm-3 h-100">
             <CargoContent
                 deliveryStep={deliveryStep}
-                deliveryCargoDtos={deliveryCargoDtos}
-                selectedDeliveryCargoDto={selectedDeliveryCargoDto}
-                setSelectedDeliveryCargoDto={setSelectedDeliveryCargoDto} />
+                deliveryNumberDtos={deliveryNumberDtos}
+                selectedDeliveryNumberDto={selectedDeliveryNumberDto}
+                setSelectedDeliveryNumberDto={setSelectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-6 h-100">
             <CargoDataContent
                 deliveryStep={deliveryStep}
-                selectedDeliveryCargoDto={selectedDeliveryCargoDto} />
+                selectedDeliveryNumberDto={selectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
-                <CargoDataInfoContent deliveryStep={deliveryStep} selectedDeliveryCargoDto={selectedDeliveryCargoDto} className="h-100" />
+                <CargoDataInfoContent deliveryStep={deliveryStep} selectedDeliveryCargoDto={selectedDeliveryNumberDto} className="h-100" />
                 {
-                    deliveryStep === 1 && selectedDeliveryCargoDto === null ?
-                        <Button variant="contained" color="secondary" size="large" onClick={handleSecondaryButtonClick}>{BTN_CANCEL}</Button>
-                        : <Button variant="contained" color={handlePrimaryButtonColor(deliveryStep)} size="large" onClick={handlePrimaryButtonClick} disabled={isDisabled(deliveryStep)}>{renderButton(deliveryStep)}</Button>
+                    deliveryStep === 1 && selectedDeliveryNumberDto === null ?
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            size="large"
+                            onClick={handleSecondaryButtonClick}>{BTN_CANCEL}</Button>
+                        : <Button
+                            variant="contained"
+                            color={handlePrimaryButtonColor(deliveryStep)}
+                            size="large"
+                            onClick={handlePrimaryButtonClick}
+                            disabled={isDisabled(deliveryStep)}>{renderButton(deliveryStep)}</Button>
                 }
             </Stack>
         </div>

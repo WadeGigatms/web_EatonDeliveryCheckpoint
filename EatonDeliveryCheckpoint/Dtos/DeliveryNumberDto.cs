@@ -1,14 +1,15 @@
-﻿using System;
+﻿using EatonDeliveryCheckpoint.Database;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EatonDeliveryCheckpoint.Database
+namespace EatonDeliveryCheckpoint.Dtos
 {
-    public class DeliveryCargoContext
+    public class DeliveryNumberDto
     {
-        public int id { get; set; }
-        public int f_delivery_file_id { get; set; }
+        public string file_name { get; set; }
+        public string upload_timestamp { get; set; }
         public string no { get; set; }
         public int material_quantity { get; set; }
         public int product_quantity { get; set; }
@@ -16,6 +17,8 @@ namespace EatonDeliveryCheckpoint.Database
         public string end_time { get; set; }
         public int valid_pallet_quantity { get; set; }
         public int invalid_pallet_quantity { get; set; }
-        public int state { get; set; } // -1: ready to delivery, 0: deliverying, 1: did delivery
+        public int state { get; set; } // // -1: ready to delivery, 0: deliverying, 1: did delivery 
+        public List<DeliveryNumberDataDto> datas { get; set; }
+
     }
 }

@@ -17,10 +17,10 @@ import {
     axiosDeliverySearchGetApi
 } from '../axios/Axios';
 
-const SearchDashboard = ({ deliveryCargoDtos }) => {
+const SearchDashboard = ({ deliveryNumberDtos }) => {
     const [searchFormAlertOpen, setSearchFormAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
-    const [selectedDeliveryCargoDto, setSelectedDeliveryCargoDto] = useState(null)
+    const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [value, setValue] = useState("")
     const [helperText, setHelperText] = useState("")
 
@@ -54,12 +54,12 @@ const SearchDashboard = ({ deliveryCargoDtos }) => {
         try {
             const response = await axiosDeliverySearchGetApi(value)
             if (response.data.result === true) {
-                const deliveryCargoDtos = response.data.deliveryCargoDtos
-                if (deliveryCargoDtos != null) {
+                const deliveryNumberDtos = response.data.deliveryNumberDtos
+                if (deliveryNumberDtos != null) {
                     console.log(response.data.deliveryCargoDtos[0])
-                    setSelectedDeliveryCargoDto(deliveryCargoDtos[0])
+                    setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
                 } else {
-                    setSelectedDeliveryCargoDto(null)
+                    setSelectedDeliveryNumberDto(null)
                 }
             }
         } catch (error) {
@@ -73,18 +73,18 @@ const SearchDashboard = ({ deliveryCargoDtos }) => {
         <div className="col-sm-3 h-100">
             <CargoContent
                 deliveryStep={0}
-                deliveryCargoDtos={deliveryCargoDtos}
-                selectedDeliveryCargoDto={null}
-                setSelectedDeliveryCargoDto={null} />
+                deliveryNumberDtos={deliveryNumberDtos}
+                selectedDeliveryNumberDto={null}
+                setSelectedDeliveryNumberDto={null} />
         </div>
         <div className="col-sm-6 h-100">
             <CargoDataContent
                 deliveryStep={3}
-                selectedDeliveryCargoDto={selectedDeliveryCargoDto} />
+                selectedDeliveryNumberDto={selectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
-                <CargoDataInfoContent deliveryStep={3} selectedDeliveryCargoDto={selectedDeliveryCargoDto} className="h-100" />
+                <CargoDataInfoContent deliveryStep={3} selectedDeliveryCargoDto={selectedDeliveryNumberDto} className="h-100" />
                 <Button variant="contained" color="primary" size="large" onClick={() => setSearchFormAlertOpen(true)}>{BTN_SEARCH}</Button>
             </Stack>
         </div>

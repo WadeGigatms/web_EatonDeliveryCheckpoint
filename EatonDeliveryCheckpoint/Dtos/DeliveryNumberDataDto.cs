@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace EatonDeliveryCheckpoint.Dtos
 {
-    public class DeliveryCargoDataDto
+    public class DeliveryNumberDataDto
     {
         public string material { get; set; }
         public int count { get; set; }

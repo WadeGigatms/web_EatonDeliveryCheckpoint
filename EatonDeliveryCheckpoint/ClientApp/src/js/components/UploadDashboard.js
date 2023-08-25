@@ -21,7 +21,7 @@ import {
 } from '../constants';
 import { axiosDeliveryUploadPostApi } from '../axios/Axios';
 
-const UploadDashboard = ({ deliveryCargoDtos }) => {
+const UploadDashboard = ({ deliveryNumberDtos }) => {
     const [file, setFile] = useState(null)
     const [fileName, setFileName] = useState(null)
     const [fileData, setFileData] = useState(null)
@@ -163,9 +163,9 @@ const UploadDashboard = ({ deliveryCargoDtos }) => {
         <div className="col-sm-3 h-100">
             <CargoContent
                 deliveryStep={0}
-                deliveryCargoDtos={deliveryCargoDtos}
-                selectedDeliveryCargoDto={null}
-                setSelectedDeliveryCargoDtos={null} />
+                deliveryNumberDtos={deliveryNumberDtos}
+                selectedDeliveryNumberDto={null}
+                setSelectedDeliveryNumberDtos={null} />
         </div>
         <div className="col-sm-6 h-100">
             <UploadPreviewContent fileData={fileData} />

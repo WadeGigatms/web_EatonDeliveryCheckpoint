@@ -16,7 +16,7 @@ import {
     TABLE_REALTIME_PALLET_QTY,
 } from '../constants';
 
-const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
+const CargoDataContent = ({ deliveryStep, selectedDeliveryNumberDto }) => {
 
     return <div className="card card-primary h-100">
         <div className="card-header">{TABLE_UPLOADED_MATERIAL}</div>
@@ -33,7 +33,7 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
                     </TableHead>
                     <TableBody>
                         {
-                            selectedDeliveryCargoDto ? selectedDeliveryCargoDto.datas.map((row, index) => {
+                            selectedDeliveryNumberDto ? selectedDeliveryNumberDto.datas.map((row, index) => {
                                 // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
                                 // Set classname
                                 var classname = ""

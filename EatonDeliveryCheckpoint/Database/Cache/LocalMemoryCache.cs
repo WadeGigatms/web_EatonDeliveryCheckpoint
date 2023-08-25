@@ -33,39 +33,39 @@ namespace EatonDeliveryCheckpoint.Database
         }
 
         // DeliveryCargoDtos: Cache the context sent to client
-        public List<DeliveryCargoDto> ReadDeliveryCargoDtos()
+        public List<DeliveryNumberDto> ReadDeliveryNumberDtos()
         {
-            if (!_cache.TryGetValue(LocalMemoryCacheKey.DeliveryCargoDtos, out List<DeliveryCargoDto> cacheEntry))
+            if (!_cache.TryGetValue(LocalMemoryCacheKey.DeliveryNumberDtos, out List<DeliveryNumberDto> cacheEntry))
             {
                 cacheEntry = null;
             }
             return cacheEntry;
         }
 
-        public void SaveDeliveryCargoDtos(List<DeliveryCargoDto> dtos)
+        public void SaveDeliveryNumberDtos(List<DeliveryNumberDto> dtos)
         {
-            _cache.Set(LocalMemoryCacheKey.DeliveryCargoDtos, dtos, TimeSpan.FromHours(1));
+            _cache.Set(LocalMemoryCacheKey.DeliveryNumberDtos, dtos, TimeSpan.FromHours(1));
         }
 
         // DeliveryingCargoDto: Cache the deliverying context sent to client
 
-        public DeliveryCargoDto ReadDeliveryingCargoDto()
+        public DeliveryNumberDto ReadDeliveryingNumberDto()
         {
-            if (!_cache.TryGetValue(LocalMemoryCacheKey.DeliveryingCargoDto, out DeliveryCargoDto cacheEntry))
+            if (!_cache.TryGetValue(LocalMemoryCacheKey.DeliveryingNumberDto, out DeliveryNumberDto cacheEntry))
             {
                 cacheEntry = null;
             }
             return cacheEntry;
         }
 
-        public void SaveDeliveryingCargoDto(DeliveryCargoDto dto)
+        public void SaveDeliveryingNumberDto(DeliveryNumberDto dto)
         {
-            _cache.Set(LocalMemoryCacheKey.DeliveryingCargoDto, dto, TimeSpan.FromHours(1));
+            _cache.Set(LocalMemoryCacheKey.DeliveryingNumberDto, dto, TimeSpan.FromHours(1));
         }
 
-        public void DeleteDeliveryingCargoDto()
+        public void DeleteDeliveryingNumberDto()
         {
-            _cache.Remove(LocalMemoryCacheKey.DeliveryingCargoDto);
+            _cache.Remove(LocalMemoryCacheKey.DeliveryingNumberDto);
 
             SaveCacheDidChange(true);
         }

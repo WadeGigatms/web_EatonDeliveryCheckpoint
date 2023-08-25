@@ -16,25 +16,25 @@ import {
     TABLE_PRODUCT_QTY,
 } from '../constants'
 
-const CargoContent = ({ deliveryStep, deliveryCargoDtos, selectedDeliveryCargoDto, setSelectedDeliveryCargoDto }) => {
+const CargoContent = ({ deliveryStep, deliveryNumberDtos, selectedDeliveryNumberDto, setSelectedDeliveryNumberDto }) => {
     const [selectedNo, setSelectedNo] = useState("")
 
     useEffect(() => {
-        if (selectedDeliveryCargoDto) {
-            setSelectedNo(selectedDeliveryCargoDto.no)
+        if (selectedDeliveryNumberDto) {
+            setSelectedNo(selectedDeliveryNumberDto.no)
         } else {
             setSelectedNo("")
         }
-    }, [selectedDeliveryCargoDto])
+    }, [selectedDeliveryNumberDto])
 
     const handleTableRowClick = (e, index, no) => {
         if (deliveryStep === 1) {
             if (selectedNo !== no) {
                 setSelectedNo(no)
-                setSelectedDeliveryCargoDto(deliveryCargoDtos[index])
+                setSelectedDeliveryNumberDto(deliveryNumberDtos[index])
             } else {
                 setSelectedNo(-1)
-                setSelectedDeliveryCargoDto(null)
+                setSelectedDeliveryNumberDto(null)
             }
         }
     }
@@ -58,7 +58,7 @@ const CargoContent = ({ deliveryStep, deliveryCargoDtos, selectedDeliveryCargoDt
                     </TableHead>
                     <TableBody>
                         {
-                            deliveryCargoDtos ? deliveryCargoDtos.map((row, index) => (
+                            deliveryNumberDtos ? deliveryNumberDtos.map((row, index) => (
                                 <TableRow
                                     hover
                                     onClick={(e) => handleTableRowClick(e, index, row.no)}

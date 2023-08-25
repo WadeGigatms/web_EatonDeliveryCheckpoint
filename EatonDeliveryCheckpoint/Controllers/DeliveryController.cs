@@ -21,7 +21,7 @@ namespace EatonDeliveryCheckpoint.Controllers
         [HttpGet("dnlist")]
         public IActionResult GetDnList()
         {
-            DeliveryCargoResultDto dto = (DeliveryCargoResultDto)_service.GetDnList();
+            DeliveryNumberResultDto dto = (DeliveryNumberResultDto)_service.GetDnList();
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
@@ -29,7 +29,7 @@ namespace EatonDeliveryCheckpoint.Controllers
         [HttpGet("search")]
         public IActionResult GetReview([FromQuery] string no)
         {
-            DeliveryCargoResultDto dto = _service.GetSearch(no);
+            DeliveryNumberResultDto dto = _service.GetSearch(no);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
