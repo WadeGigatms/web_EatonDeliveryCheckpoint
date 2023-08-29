@@ -11,7 +11,7 @@ const MuiProgress = ({ open }) => {
     return <Dialog open={open} >
         <DialogContent>
             <CircularProgress variant="indeterminate" disableShrink={true} size="4rem" />
-            <DialogContentText>載入中</DialogContentText>
+            <DialogContentText sx={{ textAlign: "center" }}>載入中</DialogContentText>
         </DialogContent>
     </Dialog>
 }

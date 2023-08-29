@@ -7,7 +7,7 @@ namespace EatonDeliveryCheckpoint.Dtos
 {
     public class TerminalReaderTriggerDto
     {
-        public int DODurationTime { get; set; }
-        public int[] DOPortList { get; set; }
+        public string DODurationTime { get; set; }
+        public string[] DOPortList { get; set; }
     }
 }

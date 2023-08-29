@@ -490,19 +490,19 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"INSERT INTO [scannel].[dbo].[eaton_cargo_data_info]( 
-                                f_delivery_number_id, 
-                                material, 
-                                count, 
-                                realtime_product_count, 
-                                realtime_pallet_count, 
-                                alert)  
-                                VALUES( 
-                                @f_delivery_number_id, 
-                                @material, 
-                                @count, 
-                                @realtime_product_count, 
-                                @realtime_pallet_count, 
-                                @alert) ";
+                            f_delivery_number_id, 
+                            material, 
+                            count, 
+                            realtime_product_count, 
+                            realtime_pallet_count, 
+                            alert)  
+                            VALUES( 
+                            @f_delivery_number_id, 
+                            @material, 
+                            @count, 
+                            @realtime_product_count, 
+                            @realtime_pallet_count, 
+                            @alert) ";
                 var result = _connection.Execute(sql, new
                 {
                     f_delivery_number_id = context.f_delivery_number_id,

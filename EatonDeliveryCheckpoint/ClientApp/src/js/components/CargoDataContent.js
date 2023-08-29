@@ -49,19 +49,15 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryNumberDto }) => {
 
                                 // Visible
                                 if (deliveryStep === 2 && row.alert === 0 && row.count === -1) {
-                                    return <></>
-                                }
-
-                                return (
-                                    <TableRow
-                                        sx={{ backgroundColor: classname }}
-                                        key={index}>
+                                    return <TableRow key={index}></TableRow>
+                                } else {
+                                    return <TableRow sx={{ backgroundColor: classname }} key={index}>
                                         <TableCell>{row.material}</TableCell>
                                         <TableCell align="right">{row.count}</TableCell>
                                         <TableCell align="right">{deliveryStep > 1 ? row.realtime_product_count : "-"}</TableCell>
                                         <TableCell align="right">{deliveryStep > 1 ? row.realtime_pallet_count : "-"}</TableCell>
                                     </TableRow>
-                                )
+                                }
                             }) : <></>
                         }
                     </TableBody>
