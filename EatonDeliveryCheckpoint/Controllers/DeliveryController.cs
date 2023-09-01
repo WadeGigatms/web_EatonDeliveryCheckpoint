@@ -25,11 +25,19 @@ namespace EatonDeliveryCheckpoint.Controllers
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
-        // GET api/<DeliveryController>/search
-        [HttpGet("search")]
+        // GET api/<DeliveryController>/review
+        [HttpGet("review")]
         public IActionResult GetReview([FromQuery] string no)
         {
-            DeliveryNumberResultDto dto = _service.GetSearch(no);
+            DeliveryNumberResultDto dto = _service.GetReview(no);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // GET api/<DeliveryController>/search
+        [HttpGet("search")]
+        public IActionResult GetSearch([FromQuery] string delivery)
+        {
+            DeliveryNumberResultDto dto = _service.GetSearch(delivery);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
@@ -78,6 +86,14 @@ namespace EatonDeliveryCheckpoint.Controllers
         public IActionResult PostToQuit([FromBody] dynamic value)
         {
             ResultDto dto = (ResultDto)_service.PostToQuit(value);
+            return dto.Result == true ? Ok(dto) : BadRequest(dto);
+        }
+
+        // DELETE api/<DeliveryController>
+        [HttpPost("delete")]
+        public IActionResult Delete([FromBody] dynamic value)
+        {
+            ResultDto dto = (ResultDto)_service.Delete(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
     }

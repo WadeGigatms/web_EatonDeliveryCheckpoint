@@ -29,7 +29,76 @@ namespace EatonDeliveryCheckpoint.Services
 
         #region Public methods
 
-        public DeliveryNumberResultDto GetSearch(string no)
+        public IResultDto Delete(dynamic value)
+        {
+            DeliveryNumberDto dto;
+
+            // Check value
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                dto = JsonConvert.DeserializeObject<DeliveryNumberDto>(value.ToString(), settings);
+            }
+            catch (Exception exp)
+            {
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+            }
+
+            DeliveryFileContext deliveryFileContext = _connection.QueryDeliveryFileContextWithFileName(dto.file_name);
+            bool result = _connection.UpdateToDisableDeliveryNumberState(dto.no);
+            if (result == false)
+            {
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+            }
+
+            // Update cache
+            _localMemoryCache.SaveCacheDidChange(true);
+
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
+        }
+
+        public DeliveryNumberResultDto GetSearch(string delivery)
+        {
+            // Check value
+            if (string.IsNullOrEmpty(delivery))
+            {
+                return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.InvalidProperties, null);
+            }
+
+            DeliveryNumberDto deliveryNumberDto = _connection.QueryDeliveryNumberDtoWithDelivery(delivery);
+            if (deliveryNumberDto == null)
+            {
+                return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.InvalidProperties, null);
+            }
+            deliveryNumberDto.datas = new List<DeliveryNumberDataDto>();
+            List<DeliveryNumberDataDto> validDeliveryNumberDataDtos = _connection.QueryValidDeliveryNumberDataDtos(deliveryNumberDto.no);
+            if (validDeliveryNumberDataDtos != null)
+            {
+                for (var i = 0; i < validDeliveryNumberDataDtos.Count(); i++)
+                {
+                    deliveryNumberDto.datas.Add(validDeliveryNumberDataDtos[i]);
+                }
+            }
+            List<DeliveryNumberDataDto> invalidDeliveryNumberDataDtos = _connection.QueryInvalidDeliveryNumberDataDtos(deliveryNumberDto.no);
+            if (invalidDeliveryNumberDataDtos != null)
+            {
+                for (var i = 0; i < invalidDeliveryNumberDataDtos.Count(); i++)
+                {
+                    deliveryNumberDto.datas.Add(invalidDeliveryNumberDataDtos[i]);
+                }
+            }
+
+            List<DeliveryNumberDto> deliveryNumberDtos = new List<DeliveryNumberDto>();
+            deliveryNumberDtos.Add(deliveryNumberDto);
+
+            return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None, deliveryNumberDtos);
+        }
+
+        public DeliveryNumberResultDto GetReview(string no)
         {
             // Check value
             if (string.IsNullOrEmpty(no))
@@ -133,7 +202,7 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch (Exception exp)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Any available deliveryingCargoDto in cache
@@ -146,7 +215,7 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     // Maybe no dn is selected and some pallet had been moved to terminal
                     // So return and no update and insert data into database
-                    return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+                    return GetResultDto(ResultEnum.True, ErrorEnum.None);
                 }
 
                 // Get DeliveryCargoDataDtos of deliveryingCargoDto from database
@@ -207,7 +276,7 @@ namespace EatonDeliveryCheckpoint.Services
 
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public IResultDto PostFromEpcServer(dynamic value)
@@ -228,7 +297,7 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Any available deliveryingCargoDto in cache
@@ -241,7 +310,7 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     // Maybe no dn is selected and some pallet had been moved to terminal
                     // So return and no update and insert data into database
-                    return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+                    return GetResultDto(ResultEnum.True, ErrorEnum.None);
                 }
 
                 // Get DeliveryCargoDataDtos of deliveryingCargoDto from database
@@ -338,7 +407,7 @@ namespace EatonDeliveryCheckpoint.Services
 
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public IResultDto PostToStart(dynamic value)
@@ -358,7 +427,7 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch (Exception exp)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Update [eaton_delivery_number] in database
@@ -366,13 +435,13 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.UpdateDeliveryNumberContextWhenStart(dto);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Save to cache
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public IResultDto PostToFinish(dynamic value)
@@ -392,7 +461,7 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch (Exception exp)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Update [eaton_delivery_number] in database
@@ -400,13 +469,13 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.UpdateDeliveryNumberContextWhenFinish(dto);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Save to cache
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public ResultDto PostToQuit(dynamic value)
@@ -426,7 +495,7 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch (Exception exp)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Update database
@@ -436,7 +505,7 @@ namespace EatonDeliveryCheckpoint.Services
             // Update cache
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         public IResultDto PostToUploadFile(dynamic value)
@@ -456,14 +525,14 @@ namespace EatonDeliveryCheckpoint.Services
             }
             catch (Exception exp)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
+                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
             // Check for duplicated file
             DeliveryFileContext existDeliveryFileContext = _connection.QueryDeliveryFileContextWithFileName(dto.FileName);
             if (existDeliveryFileContext != null)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.DuplicatedFileName);
+                return GetResultDto(ResultEnum.False, ErrorEnum.DuplicatedFileName);
             }
 
             // Insert into [eaton_delivery_file]
@@ -471,14 +540,14 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.InsertDeliveryFileContext(insertDeliveryFileContext);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Query [eaton_delivery_file]
             DeliveryFileContext insertedDeliveryFileContext = _connection.QueryDeliveryFileContextWithFileName(dto.FileName);
             if (insertedDeliveryFileContext == null)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Insert into [eaton_delivery_number]
@@ -486,14 +555,14 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.InsertDeliveryNumberContexts(insertDeliveryNumberContexts);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Query [eaton_delivery_number]
             List<DeliveryNumberContext> insertedDeliveryNumberContexts = _connection.QueryDeliveryNumberContextsWithFileId(insertedDeliveryFileContext.id);
             if (insertedDeliveryNumberContexts == null)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Insert into [eaton_cargo_data]
@@ -501,7 +570,7 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.InsertCargoDataContexts(insertCargoDataContexts);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Query [eaton_cargo_data]
@@ -509,7 +578,7 @@ namespace EatonDeliveryCheckpoint.Services
             List<CargoDataContext> insertedCargoDataContexts = _connection.QueryCargoDataContextsWithCargoId(cargoIds);
             if (insertedCargoDataContexts == null)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Insert into [eaton_cargo_data_info]
@@ -517,26 +586,26 @@ namespace EatonDeliveryCheckpoint.Services
             result = _connection.InsertCargoDataInfoContexts(insertCargoDataInfoContext);
             if (result == false)
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Query [eaton_cargo_data_info]
             List<CargoDataInfoContext> insertedCargoDataInfoContext = _connection.QueryCargoDataInfoContexts(cargoIds);
             if (insertedCargoDataInfoContext == null) 
             {
-                return GetPostResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
+                return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             _localMemoryCache.SaveCacheDidChange(true);
 
-            return GetPostResultDto(ResultEnum.True, ErrorEnum.None);
+            return GetResultDto(ResultEnum.True, ErrorEnum.None);
         }
 
         #endregion
 
         #region Private methods
 
-        private ResultDto GetPostResultDto(ResultEnum result, ErrorEnum error)
+        private ResultDto GetResultDto(ResultEnum result, ErrorEnum error)
         {
             return new ResultDto
             {
@@ -606,6 +675,7 @@ namespace EatonDeliveryCheckpoint.Services
                 var groupByMaterialContexts = groupByNumberIdContext.GroupBy(context => context.material).Select(context => new
                 {
                     f_delivery_number_id = context.Select(c => c.f_delivery_number_id).FirstOrDefault(),
+                    delivery = context.Select(c => c.delivery).FirstOrDefault(),
                     material = context.Key,
                     count = context.Sum(d => d.quantity),
                 });
@@ -614,6 +684,7 @@ namespace EatonDeliveryCheckpoint.Services
                     insertCargoDataInfoContext.Add(new CargoDataInfoContext
                     {
                         f_delivery_number_id = groupByMaterialContext.f_delivery_number_id,
+                        delivery = groupByMaterialContext.delivery,
                         material = groupByMaterialContext.material,
                         count = groupByMaterialContext.count,
                         realtime_product_count = 0,
@@ -631,6 +702,7 @@ namespace EatonDeliveryCheckpoint.Services
             return new CargoDataInfoContext
             {
                 f_delivery_number_id = id,
+                delivery = "-",
                 material = dto.pn,
                 count = -1,
                 realtime_product_count = dto.qty,
@@ -673,18 +745,6 @@ namespace EatonDeliveryCheckpoint.Services
             };
         }
 
-        private DeliveryNumberDataDto GetDeliveryCargoDataDto(DeliveryTerminalPostDto dto, int count, int alert)
-        {
-            return new DeliveryNumberDataDto
-            {
-                material = dto.pn,
-                count = count, // -1: miss match material
-                realtime_product_count = dto.qty,
-                realtime_pallet_count = 1,
-                alert = alert, // 0: close, 1: invalid for both miss match material and over qty
-            };
-        }
-
         private void UpdateDeliveryNumberDtoWithValidQty(ref DeliveryNumberDto dto)
         {
             dto.valid_pallet_quantity += 1;
@@ -712,6 +772,7 @@ namespace EatonDeliveryCheckpoint.Services
         {
             dto.datas.Add(new DeliveryNumberDataDto
             {
+                delivery = "-",
                 material = postDto.pn,
                 count = -1,
                 realtime_product_count = postDto.qty,

@@ -6,6 +6,7 @@ import MuiFormDialog from "./MuiFormDialog";
 import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
 import {
+    TABLE_REALTIME_MATERIAL,
     TABLE_SEARCH,
     MESSAGE_SEARCH_DN,
     BTN_CONFIRM,
@@ -23,10 +24,27 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [value, setValue] = useState("")
     const [helperText, setHelperText] = useState("")
+    const [validDatas, setValidDatas] = useState(null)
+    const [invalidDatas, setInvalidDatas] = useState(null)
 
     useEffect(() => {
         setSearchFormAlertOpen(true)
     }, [])
+
+    useEffect(() => {
+        if (selectedDeliveryNumberDto) {
+            const validRows = selectedDeliveryNumberDto.datas.filter((data) => data.alert === 0)
+            const invalidRows = selectedDeliveryNumberDto.datas.filter((data) => data.alert === 1)
+            setValidDatas(validRows)
+            setInvalidDatas(invalidRows)
+            console.log(selectedDeliveryNumberDto.datas)
+            console.log(validRows)
+            console.log(invalidRows)
+        } else {
+            setValidDatas(null)
+            setInvalidDatas(null)
+        }
+    }, [selectedDeliveryNumberDto])
 
     const handleTextFieldChange = (e) => {
         if (e.target.value !== "") {
@@ -40,7 +58,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
             setSearchFormAlertOpen(false)
             setValue("")
             setHelperText("")
-            requestReviewGetApi()
+            requestSearchGetApi()
         }
     }
 
@@ -54,7 +72,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
         setHelperText("")
     }
 
-    async function requestReviewGetApi() {
+    async function requestSearchGetApi() {
         setLoadingAlertOpen(true)
         try {
             const response = await axiosDeliverySearchGetApi(value)
@@ -82,9 +100,18 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
                 setSelectedDeliveryNumberDto={null} />
         </div>
         <div className="col-sm-6 h-100">
-            <CargoDataContent
-                deliveryStep={3}
-                selectedDeliveryNumberDto={selectedDeliveryNumberDto} />
+            <Stack spacing={2} direction="column" className="h-100">
+                <CargoDataContent
+                    className={"h-75"}
+                    title={TABLE_REALTIME_MATERIAL}
+                    deliveryStep={3}
+                    datas={validDatas} />
+                <CargoDataContent
+                    className={"h-25"}
+                    title={TABLE_REALTIME_MATERIAL}
+                    deliveryStep={3}
+                    datas={invalidDatas} />
+            </Stack>
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">

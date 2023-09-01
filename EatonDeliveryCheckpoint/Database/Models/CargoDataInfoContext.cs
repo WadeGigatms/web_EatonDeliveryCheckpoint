@@ -9,6 +9,7 @@ namespace EatonDeliveryCheckpoint.Database
     {
         public int id { get; set; }
         public int f_delivery_number_id { get; set; }
+        public string delivery { get; set; }
         public string material { get; set; }
         public int count { get; set; }
         public int realtime_product_count { get; set; }

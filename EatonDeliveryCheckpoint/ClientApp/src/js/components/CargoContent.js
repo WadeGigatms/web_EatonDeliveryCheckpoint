@@ -28,7 +28,7 @@ const CargoContent = ({ deliveryStep, deliveryNumberDtos, selectedDeliveryNumber
     }, [selectedDeliveryNumberDto])
 
     const handleTableRowClick = (e, index, no) => {
-        if (deliveryStep === 1) {
+        if (deliveryStep === 1 || deliveryStep === 4) {
             if (selectedNo !== no) {
                 setSelectedNo(no)
                 setSelectedDeliveryNumberDto(deliveryNumberDtos[index])

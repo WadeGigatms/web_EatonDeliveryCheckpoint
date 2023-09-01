@@ -54,6 +54,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public int QueryQtyByCargoDataRecordContextWithInfoIds(int cargo_id, int info_id)
             => MsSqlConnectionRepository.QueryQtyByCargoDataRecordContextWithInfoIds(cargo_id, info_id);
 
+        public DeliveryNumberDto QueryDeliveryNumberDtoWithDelivery(string delivery)
+            => MsSqlConnectionRepository.QueryDeliveryNumberDtoWithDelivery(delivery);
+
         public DeliveryNumberDto QueryDeliveryNumberDtoWithNo(string no)
             => MsSqlConnectionRepository.QueryDeliveryNumberDtoWithNo(no);
 
@@ -100,6 +103,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         public bool UpdateCargoDataInfoContext(CargoDataInfoContext context)
             => MsSqlConnectionRepository.UpdateCargoDataInfoContext(context);
+
+        public bool UpdateToDisableDeliveryNumberState(string no)
+            => MsSqlConnectionRepository.UpdateToDisableDeliveryNumberState(no);
 
         #endregion
     }

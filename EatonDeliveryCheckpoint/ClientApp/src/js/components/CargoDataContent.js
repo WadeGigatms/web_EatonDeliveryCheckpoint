@@ -9,17 +9,16 @@ import {
     Paper
 } from '@mui/material';
 import {
-    TABLE_UPLOADED_MATERIAL,
     TABLE_MATERIAL,
     TABLE_TARGET_MATERIAL_QTY,
     TABLE_REALTIME_MATERIAL_QTY,
     TABLE_REALTIME_PALLET_QTY,
 } from '../constants';
 
-const CargoDataContent = ({ deliveryStep, selectedDeliveryNumberDto }) => {
+const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
 
-    return <div className="card card-primary h-100">
-        <div className="card-header">{TABLE_UPLOADED_MATERIAL}</div>
+    return <div className={"card card-primary " + className }>
+        <div className="card-header">{title}</div>
         <div className="card-body table-responsive p-0">
             <TableContainer component={Paper}>
                 <Table size="small">
@@ -33,7 +32,7 @@ const CargoDataContent = ({ deliveryStep, selectedDeliveryNumberDto }) => {
                     </TableHead>
                     <TableBody>
                         {
-                            selectedDeliveryNumberDto ? selectedDeliveryNumberDto.datas.map((row, index) => {
+                            datas ? datas.map((row, index) => {
                                 // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
                                 // Set classname
                                 var classname = ""

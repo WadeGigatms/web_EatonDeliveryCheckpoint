@@ -13,13 +13,19 @@ import {
     MESSAGE_ERROR_UPLOAD,
     MESSAGE_SUCCEED_UPLOAD,
     MESSAGE_FILE_UPLOAD,
+    MESSAGE_DELETE_FILE,
+    MESSAGE_SUCCEED_DELETE,
+    MESSAGE_ERROR_DELETE,
     BTN_CHOOSE_FILE,
     BTN_CONFIRM,
     BTN_CANCEL,
     BTN_UPLOAD_FILE,
+    BTN_DELETE_FILE,
+    BTN_EDIT_FILE,
     TABLE_UPLOAD_FILE,
+    TABLE_EDIT_FILE,
 } from '../constants';
-import { axiosDeliveryUploadPostApi } from '../axios/Axios';
+import { axiosDeliveryUploadPostApi, axiosDeliveryDeleteApi } from '../axios/Axios';
 
 const UploadDashboard = ({ deliveryNumberDtos }) => {
     const [file, setFile] = useState(null)
@@ -28,12 +34,20 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
     const [fileTypeError, setFileTypeError] = useState(null)
     const [uploadResult, setUploadResult] = useState(null)
     const [uploadDescriptionResult, setUploadResultDescription] = useState(null)
+    const [uploadResultAlertOpen, setUploadReultAlertOpen] = useState(false)
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
     const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
-    const [uploadResultAlertOpen, setUploadReultAlertOpen] = useState(false)
     const [fileTypeErrorAlertOpen, setFileTypeErrorAlertOpen] = useState(false)
     const [fileTypeErrorSeverity, setFileTypeErrorSeverity] = useState("success")
     const [uploadResultSeverity, setUploadResultSeverity] = useState("success")
+    const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
+    const [deleteState, setDeleteState] = useState(null)
+    const [deliveryStep, setDeliveryStep] = useState()
+    const [deleteAlertOpen, setDeleteAlertOpen] = useState(false)
+    const [deleteResult, setDeleteResult] = useState(null)
+    const [deleteDescriptionResult, setDeleteResultDescription] = useState(null)
+    const [deleteResultSeverity, setDeleteResultSeverity] = useState("success")
+    const [deleteResultAlertOpen, setDeleteResultAlertOpen] = useState(false)
 
     useEffect(() => {
         setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
@@ -42,6 +56,14 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
     useEffect(() => {
         setUploadResultSeverity(uploadResult === true ? "success" : "error")
     }, [uploadResult])
+
+    useEffect(() => {
+        setDeleteResultSeverity(deleteResult === true ? "success" : "error")
+    }, [deleteResult])
+
+    useEffect(() => {
+        setDeleteState(selectedDeliveryNumberDto ? true : false)
+    }, [selectedDeliveryNumberDto])
 
     const handleFileSelect = (e) => {
         clearFile()
@@ -93,13 +115,30 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         }
     }
 
-    const handleFileUpload = (e) => {
+    const handleFileEditClick = (e) => {
+        if (selectedDeliveryNumberDto === null || selectedDeliveryNumberDto === undefined) {
+            setDeliveryStep(4)
+        } else {
+            if (deleteState === true) {
+                setDeleteAlertOpen(true)
+            } else {
+
+            }
+        }
+    }
+
+    const handleFileUploadClick = (e) => {
         // Show alert
         setConfirmAlertOpen(true)
     }
 
-    const handleFileCancel = (e) => {
+    const handleFileCancelClick = (e) => {
         clearFile()
+    }
+
+    const handleConfirmDeleteButtonClick = (e) => {
+        requestDeleteApi()
+        setDeliveryStep(0)
     }
 
     const handleConfirmButtonClick = () => {
@@ -113,9 +152,12 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         setFileTypeErrorAlertOpen(false)
         setConfirmAlertOpen(false)
         setUploadReultAlertOpen(false)
+        setDeleteAlertOpen(false)
         setFile(null)
         setFileName(null)
         setFileData(null)
+        setDeleteAlertOpen(false)
+        setSelectedDeliveryNumberDto(null)
     }
 
     async function requestPostUploadApi() {
@@ -143,6 +185,31 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         setLoadingAlertOpen(false)
     }
 
+    async function requestDeleteApi() {
+        setLoadingAlertOpen(true)
+        try {
+            const json = JSON.stringify(selectedDeliveryNumberDto)
+            const response = await axiosDeliveryDeleteApi(json)
+            if (response.data.result === true) {
+                setSelectedDeliveryNumberDto(null)
+                setDeleteResult(true)
+                setDeleteResultDescription(MESSAGE_SUCCEED_DELETE)
+                setDeleteResultAlertOpen(true)
+            } else {
+                setSelectedDeliveryNumberDto(null)
+                setDeleteResult(false)
+                setDeleteResultDescription(MESSAGE_ERROR_DELETE)
+                setDeleteResultAlertOpen(true)
+            }
+        } catch (error) {
+            setSelectedDeliveryNumberDto(null)
+            setDeleteResult(false)
+            setDeleteResultDescription(MESSAGE_ERROR_DELETE + ": " + error.response.data.error)
+            setDeleteResultAlertOpen(true)
+        }
+        setLoadingAlertOpen(false)
+    }
+
     const clearFile = () => {
         setFile(null)
         setFileName(null)
@@ -155,17 +222,25 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         setUploadResultDescription(null)
     }
 
-    function isDisabled(file) {
+    function renderEditButton(deleteState) {
+        return deleteState === true ? BTN_DELETE_FILE : BTN_EDIT_FILE
+    }
+
+    function isEditButtonDisabled(deliveryNumberDtos) {
+        return deliveryNumberDtos !== null ? false : true;
+    }
+
+    function isUploadButtonDisabled(file) {
         return file === null ? true : false
     }
 
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
             <CargoContent
-                deliveryStep={0}
+                deliveryStep={deliveryStep}
                 deliveryNumberDtos={deliveryNumberDtos}
-                selectedDeliveryNumberDto={null}
-                setSelectedDeliveryNumberDtos={null} />
+                selectedDeliveryNumberDto={selectedDeliveryNumberDto}
+                setSelectedDeliveryNumberDto={setSelectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-6 h-100">
             <UploadPreviewContent fileData={fileData} />
@@ -195,8 +270,9 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
                 </div>
 
                 <Stack spacing={2} direction="column">
-                    <Button variant="contained" color="primary" size="large" onClick={handleFileUpload} disabled={isDisabled(file)}>{BTN_UPLOAD_FILE}</Button>
-                    <Button variant="contained" color="secondary" size="large" onClick={handleFileCancel} disabled={isDisabled(file)}>{BTN_CANCEL}</Button>
+                    <Button variant="contained" color="warning" size="large" onClick={handleFileEditClick} disabled={isEditButtonDisabled(deliveryNumberDtos)}>{renderEditButton(deleteState)}</Button>
+                    <Button variant="contained" color="primary" size="large" onClick={handleFileUploadClick} disabled={isUploadButtonDisabled(file)}>{BTN_UPLOAD_FILE}</Button>
+                    <Button variant="contained" color="secondary" size="large" onClick={handleFileCancelClick} disabled={isUploadButtonDisabled(file)}>{BTN_CANCEL}</Button>
                 </Stack>
             </Stack>
         </div>
@@ -208,6 +284,15 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmButtonClick}
+            handleSecondaryButtonClick={handleCancelButtonClick} />
+        <MuiConfirmDialog
+            open={deleteAlertOpen}
+            onClose={() => setDeleteAlertOpen(false)}
+            title={TABLE_EDIT_FILE}
+            contentText={MESSAGE_DELETE_FILE}
+            primaryButton={BTN_CONFIRM}
+            secondaryButton={BTN_CANCEL}
+            handlePrimaryButtonClick={handleConfirmDeleteButtonClick}
             handleSecondaryButtonClick={handleCancelButtonClick} />
         <MuiAlertDialog
             severity={fileTypeErrorSeverity}
@@ -222,6 +307,13 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
             onClose={null}
             title={TABLE_UPLOAD_FILE}
             contentText={uploadDescriptionResult}
+            handleButtonClick={handleCancelButtonClick} />
+        <MuiAlertDialog
+            severity={deleteResultSeverity}
+            open={deleteResultAlertOpen}
+            onClose={null}
+            title={TABLE_EDIT_FILE}
+            contentText={deleteDescriptionResult}
             handleButtonClick={handleCancelButtonClick} />
         <MuiProgress open={loadingAlertOpen} />
     </div>

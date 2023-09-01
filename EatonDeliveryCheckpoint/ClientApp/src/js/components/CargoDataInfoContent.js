@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import {
     TABLE_NO,
-    TABLE_UPLOADED_DATA,
+    TABLE_REALTIME_DATA,
     TABLE_DATE,
     TABLE_START_TIME,
     TABLE_END_TIME,
@@ -74,7 +74,7 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
     }, [deliveryStep, selectedDeliveryCargoDto, currentTime])
 
     return <div className="card card-primary h-100">
-        <div className="card-header">{TABLE_UPLOADED_DATA}</div>
+        <div className="card-header">{TABLE_REALTIME_DATA}</div>
         <div className="card-body table-responsive p-0">
             <TableContainer component={Paper}>
                 <Table size="small">

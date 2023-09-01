@@ -24,18 +24,19 @@ import {
     BTN_CANCEL,
     BTN_CONTINUE,
     BTN_QUIT,
-    BTN_FINISH
+    BTN_FINISH,
+    TABLE_REALTIME_MATERIAL,
 } from '../constants';
 import {
     axiosDeliveryStartPostApi,
     axiosDeliveryFinishPostApi,
     axiosDeliveryDismissAlertPostApi,
     axiosDeliveryQuitPostApi,
-    axiosDeliverySearchGetApi
+    axiosDeliveryReviewGetApi
 } from '../axios/Axios';
 
 const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi }) => {
-    const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: finish and review, -1: alert or pause
+    const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: finish and search, 4: edit to delete, -1: alert or pause
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [startAlertOpen, setStartAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
@@ -45,6 +46,8 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     const [invalidQtyAlertOpen, setInvalidQtyAlertOpen] = useState(false)
     const [pauseAlertOpen, setPauseAlertOpen] = useState(false)
     const [pauseMessage, setPauseMessage] = useState("")
+    const [validDatas, setValidDatas] = useState(null)
+    const [invalidDatas, setInvalidDatas] = useState(null)
 
     useEffect(() => {
         if (deliveryNumberDtos) {
@@ -64,17 +67,28 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
 
     useEffect(() => {
         if (selectedDeliveryNumberDto) {
-            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count === -1 && data.alert === 1)
+            // Examine alert
+            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count === -1 && data.alert === 1 && data.delivery === "-")
             const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count < data.realtime_product_count && data.alert === 1)
             if (invalidMaterialDataDto && deliveryStep === 2) {
                 setInvalidMaterialAlertOpen(true)
             } else if (invalidQtyDataDto && deliveryStep === 2) {
                 setInvalidQtyAlertOpen(true)
-            } else {
-                
+            }
+
+            // Set valid datas and invalid datas
+            if (deliveryStep === 1 || deliveryStep === 2) {
+                setValidDatas(selectedDeliveryNumberDto.datas)
+                setInvalidDatas(null)
+            } else if (deliveryStep === 3) {
+                const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.count > 0 && data.delivery !== "-" && data.count === data.realtime_product_count)
+                const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.count < 0 || data.delivery === "-" || data.alert === 1)
+                setValidDatas(validDatas)
+                setInvalidDatas(invalidDatas)
             }
         } else {
-            setSelectedDeliveryNumberDto(null)
+            setValidDatas(null)
+            setInvalidDatas(null)
         }
     }, [selectedDeliveryNumberDto, deliveryStep])
 
@@ -306,7 +320,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     async function requestReviewGetApi() {
         setLoadingAlertOpen(true)
         try {
-            const response = await axiosDeliverySearchGetApi(selectedDeliveryNumberDto.no)
+            const response = await axiosDeliveryReviewGetApi(selectedDeliveryNumberDto.no)
             if (response.data.result === true) {
                 const deliveryNumberDtos = response.data.deliveryNumberDtos
                 if (deliveryNumberDtos != null) {
@@ -331,9 +345,22 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                 setSelectedDeliveryNumberDto={setSelectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-6 h-100">
-            <CargoDataContent
-                deliveryStep={deliveryStep}
-                selectedDeliveryNumberDto={selectedDeliveryNumberDto} />
+            <Stack spacing={2} direction="column" className="h-100">
+                <CargoDataContent
+                    className={deliveryStep === 3 ? "h-75" : "h-100"}
+                    title={TABLE_REALTIME_MATERIAL}
+                    deliveryStep={deliveryStep}
+                    datas={validDatas} />
+                {
+                    deliveryStep === 3 ? (
+                        <CargoDataContent
+                            className={"h-25"}
+                            title={TABLE_REALTIME_MATERIAL}
+                            deliveryStep={deliveryStep}
+                            datas={invalidDatas} />
+                        ) : (<></>)
+                }
+            </Stack>
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
