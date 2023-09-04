@@ -3,7 +3,7 @@ import { Stack, Button } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import { NAV_HOME, NAV_SEARCH, NAV_TITLE, NAV_UPLOAD } from '../constants';
 import DeliveryDashboard from './DeliveryDashboard';
-import UploadDashboard from './UploadDashboard';
+import FileDashboard from './FileDashboard';
 import SearchDashboard from './SearchDashboard';
 import Logo from '../../img/eaton_logo.jpg';
 import { axiosDeliveryGetApi } from '../axios/Axios';
@@ -54,7 +54,7 @@ const Content = () => {
                     deliveryNumberDtos={deliveryNumberDtos}
                     requestGetApi={requestGetApi}/>
             case 1:
-                return <UploadDashboard deliveryNumberDtos={deliveryNumberDtos} />
+                return <FileDashboard deliveryNumberDtos={deliveryNumberDtos} />
             case 2:
                 return <SearchDashboard
                     deliveryNumberDtos={deliveryNumberDtos}/>

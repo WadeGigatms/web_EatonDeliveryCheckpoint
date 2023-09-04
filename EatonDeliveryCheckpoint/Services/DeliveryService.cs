@@ -29,7 +29,7 @@ namespace EatonDeliveryCheckpoint.Services
 
         #region Public methods
 
-        public IResultDto Delete(dynamic value)
+        public IResultDto PostToDisable(dynamic value)
         {
             DeliveryNumberDto dto;
 
@@ -43,7 +43,7 @@ namespace EatonDeliveryCheckpoint.Services
                 };
                 dto = JsonConvert.DeserializeObject<DeliveryNumberDto>(value.ToString(), settings);
             }
-            catch (Exception exp)
+            catch
             {
                 return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }

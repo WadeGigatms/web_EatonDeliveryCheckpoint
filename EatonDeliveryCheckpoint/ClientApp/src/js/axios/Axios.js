@@ -23,4 +23,4 @@ export const axiosDeliveryStartPostApi = (data) => axiosRequest.post("/start", d
 export const axiosDeliveryFinishPostApi = (data) => axiosRequest.post("/finish", data);
 export const axiosDeliveryDismissAlertPostApi = (data) => axiosRequest.post("/dismissalert", data);
 export const axiosDeliveryQuitPostApi = (data) => axiosRequest.post("/quit", data);
-export const axiosDeliveryDeleteApi = (data) => axiosRequest.delete("/delete", data);
+export const axiosDeliveryDisablePostApi = (data) => axiosRequest.post("/disable", data);

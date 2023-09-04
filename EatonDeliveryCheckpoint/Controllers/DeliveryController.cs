@@ -90,10 +90,10 @@ namespace EatonDeliveryCheckpoint.Controllers
         }
 
         // DELETE api/<DeliveryController>
-        [HttpPost("delete")]
-        public IActionResult Delete([FromBody] dynamic value)
+        [HttpPost("disable")]
+        public IActionResult PostToDisable([FromBody] dynamic value)
         {
-            ResultDto dto = (ResultDto)_service.Delete(value);
+            ResultDto dto = (ResultDto)_service.PostToDisable(value);
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
     }

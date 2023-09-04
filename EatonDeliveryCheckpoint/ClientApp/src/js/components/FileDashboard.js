@@ -3,7 +3,7 @@ import { Stack, Button, TextField } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import * as XLSX from 'xlsx';
 import CargoContent from './CargoContent';
-import UploadPreviewContent from './UploadPreviewContent';
+import FilePreviewContent from './FilePreviewContent';
 import MuiConfirmDialog from "./MuiConfirmDialog";
 import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
@@ -25,29 +25,31 @@ import {
     TABLE_UPLOAD_FILE,
     TABLE_EDIT_FILE,
 } from '../constants';
-import { axiosDeliveryUploadPostApi, axiosDeliveryDeleteApi } from '../axios/Axios';
+import { axiosDeliveryUploadPostApi, axiosDeliveryDisablePostApi } from '../axios/Axios';
 
-const UploadDashboard = ({ deliveryNumberDtos }) => {
+const FileDashboard = ({ deliveryNumberDtos }) => {
     const [file, setFile] = useState(null)
     const [fileName, setFileName] = useState(null)
     const [fileData, setFileData] = useState(null)
     const [fileTypeError, setFileTypeError] = useState(null)
-    const [uploadResult, setUploadResult] = useState(null)
-    const [uploadDescriptionResult, setUploadResultDescription] = useState(null)
-    const [uploadResultAlertOpen, setUploadReultAlertOpen] = useState(false)
-    const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
-    const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [fileTypeErrorAlertOpen, setFileTypeErrorAlertOpen] = useState(false)
     const [fileTypeErrorSeverity, setFileTypeErrorSeverity] = useState("success")
+    const [uploadResult, setUploadResult] = useState(null)
+    const [uploadDescriptionResult, setUploadResultDescription] = useState(null)
+    const [uploadResultAlertOpen, setUploadResultAlertOpen] = useState(false)
     const [uploadResultSeverity, setUploadResultSeverity] = useState("success")
-    const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
-    const [deleteState, setDeleteState] = useState(null)
-    const [deliveryStep, setDeliveryStep] = useState()
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false)
     const [deleteResult, setDeleteResult] = useState(null)
     const [deleteDescriptionResult, setDeleteResultDescription] = useState(null)
     const [deleteResultSeverity, setDeleteResultSeverity] = useState("success")
     const [deleteResultAlertOpen, setDeleteResultAlertOpen] = useState(false)
+    const [deliveryStep, setDeliveryStep] = useState(0)
+    const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
+    const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
+    const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
+    const [primaryButtonText, setPrimaryButtonText] = useState(BTN_UPLOAD_FILE)
+    const [primaryButtonColor, setPrimaryButtonColor] = useState("primary")
+    const [disablePrimaryButton, setDisablePrimaryButton] = useState(true)
 
     useEffect(() => {
         setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
@@ -62,12 +64,30 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
     }, [deleteResult])
 
     useEffect(() => {
-        setDeleteState(selectedDeliveryNumberDto ? true : false)
-    }, [selectedDeliveryNumberDto])
+        if (file) {
+            setPrimaryButtonText(BTN_UPLOAD_FILE)
+            setPrimaryButtonColor("primary")
+            setDisablePrimaryButton(false)
+            return
+        } else {
+            if (selectedDeliveryNumberDto) {
+                setPrimaryButtonText(BTN_DELETE_FILE)
+                setPrimaryButtonColor("error")
+                setDisablePrimaryButton(false)
+                return
+            }
+            if (deliveryNumberDtos) {
+                setPrimaryButtonText(BTN_EDIT_FILE)
+                setPrimaryButtonColor("warning")
+                setDisablePrimaryButton(false)
+                return
+            }
+        }
+    }, [file, deliveryNumberDtos, selectedDeliveryNumberDto])
 
     const handleFileSelect = (e) => {
         clearFile()
-        clearResult()
+        clearUploadResult()
         setLoadingAlertOpen(true)
 
         let fileTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv']
@@ -115,27 +135,6 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         }
     }
 
-    const handleFileEditClick = (e) => {
-        if (selectedDeliveryNumberDto === null || selectedDeliveryNumberDto === undefined) {
-            setDeliveryStep(4)
-        } else {
-            if (deleteState === true) {
-                setDeleteAlertOpen(true)
-            } else {
-
-            }
-        }
-    }
-
-    const handleFileUploadClick = (e) => {
-        // Show alert
-        setConfirmAlertOpen(true)
-    }
-
-    const handleFileCancelClick = (e) => {
-        clearFile()
-    }
-
     const handleConfirmDeleteButtonClick = (e) => {
         requestDeleteApi()
         setDeliveryStep(0)
@@ -148,16 +147,48 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         requestPostUploadApi()
     }
 
-    const handleCancelButtonClick = () => {
-        setFileTypeErrorAlertOpen(false)
+    const handlePrimaryButtonClick = (e) => {
+        if (file) {
+            setConfirmAlertOpen(true)
+            return
+        } else {
+            if (selectedDeliveryNumberDto) {
+                setDeleteAlertOpen(true)
+                return
+            }
+            if (deliveryNumberDtos) {
+                setDeliveryStep(1)
+                return
+            }
+        }
+    }
+
+    const handleCancelButtonClick = (e) => {
         setConfirmAlertOpen(false)
-        setUploadReultAlertOpen(false)
+        setFileTypeErrorAlertOpen(false)
+        setUploadResultAlertOpen(false)
         setDeleteAlertOpen(false)
+        setDeleteResultAlertOpen(false)
+
+        clearFile()
+        clearUploadResult()
+        clearDeleteResult()
+        setSelectedDeliveryNumberDto(null)
+    }
+
+    const clearFile = () => {
         setFile(null)
         setFileName(null)
         setFileData(null)
-        setDeleteAlertOpen(false)
-        setSelectedDeliveryNumberDto(null)
+        setFileTypeError(null)
+    }
+
+    const clearUploadResult = () => {
+        setUploadResultDescription(null)
+    }
+
+    const clearDeleteResult = () => {
+        setDeleteResultDescription(null)
     }
 
     async function requestPostUploadApi() {
@@ -171,16 +202,16 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
             if (response.data.result === true) {
                 setUploadResult(true)
                 setUploadResultDescription(MESSAGE_SUCCEED_UPLOAD)
-                setUploadReultAlertOpen(true)
+                setUploadResultAlertOpen(true)
             } else {
                 setUploadResult(false)
                 setUploadResultDescription(MESSAGE_ERROR_UPLOAD)
-                setUploadReultAlertOpen(true)
+                setUploadResultAlertOpen(true)
             }
         } catch (error) {
             setUploadResult(false)
             setUploadResultDescription(MESSAGE_ERROR_UPLOAD + ": " + error.response.data.error)
-            setUploadReultAlertOpen(true)
+            setUploadResultAlertOpen(true)
         }
         setLoadingAlertOpen(false)
     }
@@ -189,7 +220,7 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         setLoadingAlertOpen(true)
         try {
             const json = JSON.stringify(selectedDeliveryNumberDto)
-            const response = await axiosDeliveryDeleteApi(json)
+            const response = await axiosDeliveryDisablePostApi(json)
             if (response.data.result === true) {
                 setSelectedDeliveryNumberDto(null)
                 setDeleteResult(true)
@@ -210,24 +241,12 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
         setLoadingAlertOpen(false)
     }
 
-    const clearFile = () => {
-        setFile(null)
-        setFileName(null)
-        setFileData(null)
-        setFileTypeError(null)
-    }
-
-    const clearResult = () => {
-        setUploadResult(null)
-        setUploadResultDescription(null)
-    }
-
     function renderEditButton(deleteState) {
         return deleteState === true ? BTN_DELETE_FILE : BTN_EDIT_FILE
     }
 
     function isEditButtonDisabled(deliveryNumberDtos) {
-        return deliveryNumberDtos !== null ? false : true;
+        return deliveryNumberDtos ? true : false;
     }
 
     function isUploadButtonDisabled(file) {
@@ -243,7 +262,7 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
                 setSelectedDeliveryNumberDto={setSelectedDeliveryNumberDto} />
         </div>
         <div className="col-sm-6 h-100">
-            <UploadPreviewContent fileData={fileData} />
+            <FilePreviewContent fileData={fileData} />
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
@@ -270,9 +289,8 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
                 </div>
 
                 <Stack spacing={2} direction="column">
-                    <Button variant="contained" color="warning" size="large" onClick={handleFileEditClick} disabled={isEditButtonDisabled(deliveryNumberDtos)}>{renderEditButton(deleteState)}</Button>
-                    <Button variant="contained" color="primary" size="large" onClick={handleFileUploadClick} disabled={isUploadButtonDisabled(file)}>{BTN_UPLOAD_FILE}</Button>
-                    <Button variant="contained" color="secondary" size="large" onClick={handleFileCancelClick} disabled={isUploadButtonDisabled(file)}>{BTN_CANCEL}</Button>
+                    <Button variant="contained" color={primaryButtonColor} size="large" onClick={handlePrimaryButtonClick} disabled={disablePrimaryButton}>{primaryButtonText}</Button>
+                    <Button variant="contained" color="secondary" size="large" onClick={handleCancelButtonClick} disabled={isUploadButtonDisabled(file)}>{BTN_CANCEL}</Button>
                 </Stack>
             </Stack>
         </div>
@@ -319,4 +337,4 @@ const UploadDashboard = ({ deliveryNumberDtos }) => {
     </div>
 }
 
-export default UploadDashboard
+export default FileDashboard

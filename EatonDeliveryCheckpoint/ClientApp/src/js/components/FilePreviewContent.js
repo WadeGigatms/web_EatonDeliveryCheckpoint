@@ -12,7 +12,7 @@ import {
     TABLE_PREVIEW_FILE
 } from '../constants';
 
-const UploadPreviewContent = ({ fileData }) => {
+const FilePreviewContent = ({ fileData }) => {
     return <div className="card card-primary h-100">
         <div className="card-header">
             {TABLE_PREVIEW_FILE}
@@ -45,4 +45,4 @@ const UploadPreviewContent = ({ fileData }) => {
     </div>
 }
 
-export default UploadPreviewContent
+export default FilePreviewContent
