@@ -50,6 +50,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
     const [primaryButtonText, setPrimaryButtonText] = useState(BTN_UPLOAD_FILE)
     const [primaryButtonColor, setPrimaryButtonColor] = useState("primary")
     const [disablePrimaryButton, setDisablePrimaryButton] = useState(true)
+    const [disableSecondaryButton, setDisableSecondaryButton] = useState(true)
 
     useEffect(() => {
         setFileTypeErrorSeverity(fileTypeError === null ? "error" : "error")
@@ -65,25 +66,29 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
 
     useEffect(() => {
         if (file) {
+            // Did select file
             setPrimaryButtonText(BTN_UPLOAD_FILE)
             setPrimaryButtonColor("primary")
             setDisablePrimaryButton(false)
+            setDisableSecondaryButton(false)
             return
         } else {
-            if (selectedDeliveryNumberDto) {
-                setPrimaryButtonText(BTN_DELETE_FILE)
-                setPrimaryButtonColor("error")
-                setDisablePrimaryButton(false)
-                return
-            }
+
             if (deliveryNumberDtos) {
+                setPrimaryButtonText(selectedDeliveryNumberDto ? BTN_DELETE_FILE : BTN_EDIT_FILE)
+                setPrimaryButtonColor(selectedDeliveryNumberDto ? "error" : "warning")
+                setDisablePrimaryButton(deliveryStep === 1 && !selectedDeliveryNumberDto ? true : false)
+                setDisableSecondaryButton(selectedDeliveryNumberDto ? false : true)
+                return
+            } else {
                 setPrimaryButtonText(BTN_EDIT_FILE)
                 setPrimaryButtonColor("warning")
-                setDisablePrimaryButton(false)
+                setDisablePrimaryButton(true)
+                setDisableSecondaryButton(true)
                 return
             }
         }
-    }, [file, deliveryNumberDtos, selectedDeliveryNumberDto])
+    }, [file, deliveryNumberDtos, selectedDeliveryNumberDto, deliveryStep])
 
     const handleFileSelect = (e) => {
         clearFile()
@@ -163,7 +168,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
         }
     }
 
-    const handleCancelButtonClick = (e) => {
+    const handleSecondaryButtonClick = (e) => {
         setConfirmAlertOpen(false)
         setFileTypeErrorAlertOpen(false)
         setUploadResultAlertOpen(false)
@@ -174,6 +179,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
         clearUploadResult()
         clearDeleteResult()
         setSelectedDeliveryNumberDto(null)
+        setDeliveryStep(0)
     }
 
     const clearFile = () => {
@@ -290,19 +296,19 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
 
                 <Stack spacing={2} direction="column">
                     <Button variant="contained" color={primaryButtonColor} size="large" onClick={handlePrimaryButtonClick} disabled={disablePrimaryButton}>{primaryButtonText}</Button>
-                    <Button variant="contained" color="secondary" size="large" onClick={handleCancelButtonClick} disabled={isUploadButtonDisabled(file)}>{BTN_CANCEL}</Button>
+                    <Button variant="contained" color="secondary" size="large" onClick={handleSecondaryButtonClick} disabled={disableSecondaryButton}>{BTN_CANCEL}</Button>
                 </Stack>
             </Stack>
         </div>
         <MuiConfirmDialog
             open={confirmAlertOpen}
-            onClose={handleCancelButtonClick}
+            onClose={handleSecondaryButtonClick}
             title={TABLE_UPLOAD_FILE}
             contentText={MESSAGE_FILE_UPLOAD}
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmButtonClick}
-            handleSecondaryButtonClick={handleCancelButtonClick} />
+            handleSecondaryButtonClick={handleSecondaryButtonClick} />
         <MuiConfirmDialog
             open={deleteAlertOpen}
             onClose={() => setDeleteAlertOpen(false)}
@@ -311,28 +317,28 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             primaryButton={BTN_CONFIRM}
             secondaryButton={BTN_CANCEL}
             handlePrimaryButtonClick={handleConfirmDeleteButtonClick}
-            handleSecondaryButtonClick={handleCancelButtonClick} />
+            handleSecondaryButtonClick={handleSecondaryButtonClick} />
         <MuiAlertDialog
             severity={fileTypeErrorSeverity}
             open={fileTypeErrorAlertOpen}
             onClose={null}
             title={TABLE_UPLOAD_FILE}
             contentText={fileTypeError}
-            handleButtonClick={handleCancelButtonClick} />
+            handleButtonClick={handleSecondaryButtonClick} />
         <MuiAlertDialog
             severity={uploadResultSeverity}
             open={uploadResultAlertOpen}
             onClose={null}
             title={TABLE_UPLOAD_FILE}
             contentText={uploadDescriptionResult}
-            handleButtonClick={handleCancelButtonClick} />
+            handleButtonClick={handleSecondaryButtonClick} />
         <MuiAlertDialog
             severity={deleteResultSeverity}
             open={deleteResultAlertOpen}
             onClose={null}
             title={TABLE_EDIT_FILE}
             contentText={deleteDescriptionResult}
-            handleButtonClick={handleCancelButtonClick} />
+            handleButtonClick={handleSecondaryButtonClick} />
         <MuiProgress open={loadingAlertOpen} />
     </div>
 }
