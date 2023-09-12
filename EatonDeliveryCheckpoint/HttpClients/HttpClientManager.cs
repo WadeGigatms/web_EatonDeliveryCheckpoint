@@ -34,8 +34,8 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 };
                 var json = JsonConvert.SerializeObject(dto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = httpClient.PostAsync("api/DOController", content).Result;
-                return response.IsSuccessStatusCode;
+                httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                return true;
             } 
             catch (Exception exp)
             {
@@ -58,8 +58,8 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 };
                 var json = JsonConvert.SerializeObject(dto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = httpClient.PostAsync("api/DOControllerStop", content).Result;
-                return response.IsSuccessStatusCode;
+                httpClient.PostAsync("api/DOControllerStop", content).ConfigureAwait(false);
+                return true;
             }
             catch (Exception exp)
             {

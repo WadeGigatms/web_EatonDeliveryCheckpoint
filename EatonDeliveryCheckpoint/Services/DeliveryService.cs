@@ -48,7 +48,6 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
-            DeliveryFileContext deliveryFileContext = _connection.QueryDeliveryFileContextWithFileName(dto.file_name);
             bool result = _connection.UpdateToDisableDeliveryNumberState(dto.no);
             if (result == false)
             {
