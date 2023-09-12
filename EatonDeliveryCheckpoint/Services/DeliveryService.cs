@@ -265,10 +265,6 @@ namespace EatonDeliveryCheckpoint.Services
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
                 }
-            } 
-            else
-            {
-
             }
 
             // Dismiss alert trigger

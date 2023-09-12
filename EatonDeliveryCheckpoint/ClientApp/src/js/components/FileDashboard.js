@@ -73,12 +73,11 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             setDisableSecondaryButton(false)
             return
         } else {
-
-            if (deliveryNumberDtos) {
+            if (deliveryNumberDtos && deliveryNumberDtos.length > 0) {
                 setPrimaryButtonText(selectedDeliveryNumberDto ? BTN_DELETE_FILE : BTN_EDIT_FILE)
                 setPrimaryButtonColor(selectedDeliveryNumberDto ? "error" : "warning")
                 setDisablePrimaryButton(deliveryStep === 1 && !selectedDeliveryNumberDto ? true : false)
-                setDisableSecondaryButton(selectedDeliveryNumberDto ? false : true)
+                setDisableSecondaryButton(selectedDeliveryNumberDto || deliveryStep === 1 ? false : true)
                 return
             } else {
                 setPrimaryButtonText(BTN_EDIT_FILE)
@@ -245,18 +244,6 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             setDeleteResultAlertOpen(true)
         }
         setLoadingAlertOpen(false)
-    }
-
-    function renderEditButton(deleteState) {
-        return deleteState === true ? BTN_DELETE_FILE : BTN_EDIT_FILE
-    }
-
-    function isEditButtonDisabled(deliveryNumberDtos) {
-        return deliveryNumberDtos ? true : false;
-    }
-
-    function isUploadButtonDisabled(file) {
-        return file === null ? true : false
     }
 
     return <div className="row h-100 p-3">

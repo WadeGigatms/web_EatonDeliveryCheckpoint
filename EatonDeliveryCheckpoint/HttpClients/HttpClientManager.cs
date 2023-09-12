@@ -24,13 +24,13 @@ namespace EatonDeliveryCheckpoint.HttpClients
             {
                 var httpClient = _httpClientFactory.CreateClient();
                 //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // standard
+                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                httpClient.BaseAddress = new Uri("http://192.168.100.103:5000/"); // standard
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 var dto = new TerminalReaderTriggerDto
                 {
                     DODurationTime = "60",
-                    DOPortList = new string[] { "1", "2" },
+                    DOPortList = new string[] { "1", "2", "4" },
                 };
                 var json = JsonConvert.SerializeObject(dto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -49,8 +49,8 @@ namespace EatonDeliveryCheckpoint.HttpClients
             {
                 var httpClient = _httpClientFactory.CreateClient();
                 //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // standard
+                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                httpClient.BaseAddress = new Uri("http://192.168.100.103:5000/"); // standard
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 var dto = new
                 {
