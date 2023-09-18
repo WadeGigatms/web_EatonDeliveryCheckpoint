@@ -25,11 +25,11 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 var httpClient = _httpClientFactory.CreateClient();
                 //httpClient.BaseAddress = new Uri("http://localhost/"); // test
                 //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                httpClient.BaseAddress = new Uri("http://192.168.100.103:5000/"); // standard
+                httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 var dto = new TerminalReaderTriggerDto
                 {
-                    DODurationTime = "60",
+                    DODurationTime = "15",
                     DOPortList = new string[] { "1", "2", "4" },
                 };
                 var json = JsonConvert.SerializeObject(dto);
@@ -50,15 +50,16 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 var httpClient = _httpClientFactory.CreateClient();
                 //httpClient.BaseAddress = new Uri("http://localhost/"); // test
                 //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                httpClient.BaseAddress = new Uri("http://192.168.100.103:5000/"); // standard
+                httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                var dto = new
+                var dto = new TerminalReaderTriggerDto
                 {
-                    state = "stop",
+                    DODurationTime = "0",
+                    DOPortList = new string[] { "1", "2", "4" },
                 };
                 var json = JsonConvert.SerializeObject(dto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                httpClient.PostAsync("api/DOControllerStop", content).ConfigureAwait(false);
+                httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
                 return true;
             }
             catch (Exception exp)
