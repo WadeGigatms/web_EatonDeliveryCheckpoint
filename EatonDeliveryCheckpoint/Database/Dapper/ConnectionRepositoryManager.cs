@@ -30,8 +30,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public DeliveryFileContext QueryDeliveryFileContextWithFileName(string fileName)
             => MsSqlConnectionRepository.QueryDeliveryFileContextWithFileName(fileName);
 
-        public List<DeliveryNumberContext> QueryDeliveryNumberContextsWithFileId(int id)
-            => MsSqlConnectionRepository.QueryDeliveryNumberContextsWithFileId(id);
+        public DeliveryNumberContext QueryDeliveryNumberContextWithFileId(int id)
+            => MsSqlConnectionRepository.QueryDeliveryNumberContextWithFileId(id);
 
         public List<CargoDataContext> QueryCargoDataContextsWithCargoId(List<int> ids)
             => MsSqlConnectionRepository.QueryDeliveryCargoDataContextsWithCargoId(ids);
@@ -73,8 +73,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public bool InsertDeliveryFileContext(DeliveryFileContext context)
             => MsSqlConnectionRepository.InsertDeliveryFileContext(context);
 
-        public bool InsertDeliveryNumberContexts(List<DeliveryNumberContext> contexts)
-            => MsSqlConnectionRepository.InsertDeliveryNumberContexts(contexts);
+        public bool InsertDeliveryNumberContext(DeliveryNumberContext context)
+            => MsSqlConnectionRepository.InsertDeliveryNumberContext(context);
 
         public bool InsertCargoDataContexts(List<CargoDataContext> contexts)
             => MsSqlConnectionRepository.InsertCargoDataContexts(contexts);

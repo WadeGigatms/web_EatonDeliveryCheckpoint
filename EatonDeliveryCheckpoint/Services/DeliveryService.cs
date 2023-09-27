@@ -546,22 +546,22 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Insert into [eaton_delivery_number]
-            List<DeliveryNumberContext> insertDeliveryNumberContexts = GetDeliveryNumberContexts(insertedDeliveryFileContext.id, dto.FileData);
-            result = _connection.InsertDeliveryNumberContexts(insertDeliveryNumberContexts);
+            DeliveryNumberContext insertDeliveryNumberContext = GetDeliveryNumberContexts(insertedDeliveryFileContext.id, dto);
+            result = _connection.InsertDeliveryNumberContext(insertDeliveryNumberContext);
             if (result == false)
             {
                 return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Query [eaton_delivery_number]
-            List<DeliveryNumberContext> insertedDeliveryNumberContexts = _connection.QueryDeliveryNumberContextsWithFileId(insertedDeliveryFileContext.id);
-            if (insertedDeliveryNumberContexts == null)
+            DeliveryNumberContext insertedDeliveryNumberContext = _connection.QueryDeliveryNumberContextWithFileId(insertedDeliveryFileContext.id);
+            if (insertedDeliveryNumberContext == null)
             {
                 return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
             // Insert into [eaton_cargo_data]
-            List<CargoDataContext> insertCargoDataContexts = GetCargoDataContexts(insertedDeliveryNumberContexts, dto.FileData);
+            List<CargoDataContext> insertCargoDataContexts = GetCargoDataContexts(insertedDeliveryNumberContext, dto.FileData);
             result = _connection.InsertCargoDataContexts(insertCargoDataContexts);
             if (result == false)
             {
@@ -619,39 +619,33 @@ namespace EatonDeliveryCheckpoint.Services
             };
         }
 
-        private List<DeliveryNumberContext> GetDeliveryNumberContexts(int id, List<FileDto> fileData)
+        private DeliveryNumberContext GetDeliveryNumberContexts(int id, DeliveryUploadPostDto dto)
         {
             List<DeliveryNumberContext> contexts = new List<DeliveryNumberContext>();
-            var files = fileData.GroupBy(file => file.No).Select(group => group.ToList()).ToList();
-            foreach(var file in files)
+            int productCount = dto.FileData.Sum(f => int.Parse(f.Quantity));
+            int materialCount = dto.FileData.GroupBy(f => f.Material).Count();
+            return new DeliveryNumberContext
             {
-                int productCount = file.Sum(f => int.Parse(f.Quantity));
-                int materialCount = file.GroupBy(f => f.Material).Count();
-                contexts.Add(new DeliveryNumberContext
-                {
-                    f_delivery_file_id = id,
-                    no = file.First().No,
-                    material_quantity = materialCount,
-                    product_quantity = productCount,
-                    start_time = "",
-                    end_time = "",
-                    valid_pallet_quantity = 0,
-                    invalid_pallet_quantity = 0,
-                    state = -1,
-                });
-            }
-            return contexts;
+                f_delivery_file_id = id,
+                no = dto.FileName.Split(".")[0],
+                material_quantity = materialCount,
+                product_quantity = productCount,
+                start_time = "",
+                end_time = "",
+                valid_pallet_quantity = 0,
+                invalid_pallet_quantity = 0,
+                state = -1,
+            };
         }
 
-        private List<CargoDataContext> GetCargoDataContexts(List<DeliveryNumberContext> deliveryCargoContexts, List<FileDto> fileData)
+        private List<CargoDataContext> GetCargoDataContexts(DeliveryNumberContext deliveryCargoContext, List<FileDto> fileData)
         {
             List<CargoDataContext> contexts = new List<CargoDataContext>();
             foreach(var data in fileData)
             {
-                var numberId = deliveryCargoContexts.Find(c => c.no == data.No).id;
                 contexts.Add(new CargoDataContext
                 {
-                    f_delivery_number_id = numberId,
+                    f_delivery_number_id = deliveryCargoContext.id,
                     delivery = data.Delivery,
                     item = data.Item,
                     material = data.Material,
@@ -664,29 +658,25 @@ namespace EatonDeliveryCheckpoint.Services
         private List<CargoDataInfoContext> GetCargoDataInfoContexts(List<CargoDataContext> contexts)
         {
             List<CargoDataInfoContext> insertCargoDataInfoContext = new List<CargoDataInfoContext>();
-            var groupByNumberIdContexts = contexts.GroupBy(context => context.f_delivery_number_id).ToList();
-            foreach(var groupByNumberIdContext in groupByNumberIdContexts)
+            var groupByMaterialContexts = contexts.GroupBy(context => context.material).Select(context => new
             {
-                var groupByMaterialContexts = groupByNumberIdContext.GroupBy(context => context.material).Select(context => new
+                f_delivery_number_id = context.Select(c => c.f_delivery_number_id).FirstOrDefault(),
+                delivery = context.Select(c => c.delivery).FirstOrDefault(),
+                material = context.Key,
+                count = context.Sum(d => d.quantity),
+            });
+            foreach (var groupByMaterialContext in groupByMaterialContexts)
+            {
+                insertCargoDataInfoContext.Add(new CargoDataInfoContext
                 {
-                    f_delivery_number_id = context.Select(c => c.f_delivery_number_id).FirstOrDefault(),
-                    delivery = context.Select(c => c.delivery).FirstOrDefault(),
-                    material = context.Key,
-                    count = context.Sum(d => d.quantity),
+                    f_delivery_number_id = groupByMaterialContext.f_delivery_number_id,
+                    delivery = groupByMaterialContext.delivery,
+                    material = groupByMaterialContext.material,
+                    count = groupByMaterialContext.count,
+                    realtime_product_count = 0,
+                    realtime_pallet_count = 0,
+                    alert = 0,
                 });
-                foreach (var groupByMaterialContext in groupByMaterialContexts)
-                {
-                    insertCargoDataInfoContext.Add(new CargoDataInfoContext
-                    {
-                        f_delivery_number_id = groupByMaterialContext.f_delivery_number_id,
-                        delivery = groupByMaterialContext.delivery,
-                        material = groupByMaterialContext.material,
-                        count = groupByMaterialContext.count,
-                        realtime_product_count = 0,
-                        realtime_pallet_count = 0,
-                        alert = 0,
-                    });
-                }
             }
 
             return insertCargoDataInfoContext;

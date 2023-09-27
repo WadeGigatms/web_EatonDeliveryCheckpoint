@@ -124,18 +124,31 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             const workbook = XLSX.read(file, { type: 'buffer' })
             const worksheetName = workbook.SheetNames[0]
             const worksheet = workbook.Sheets[worksheetName]
+            worksheet.A1.w = "Delivery"
+            worksheet.B1.w = "Item"
+            worksheet.C1.w = "Material"
+            worksheet.D1.w = "Quantity"
+            if (worksheet.E1) {
+                clearFile()
+                setFileTypeError(MESSAGE_ERROR_FILE_TYPE)
+                setFileTypeErrorAlertOpen(true)
+                return
+            }
+            /*
             worksheet.A1.w = "No"
             worksheet.B1.w = "Delivery"
             worksheet.C1.w = "Item"
             worksheet.D1.w = "Material"
             worksheet.E1.w = "Quantity"
+            */
             const data = XLSX.utils.sheet_to_json(worksheet)
-
             setFileData(data)
             setLoadingAlertOpen(false)
         } else {
-            setFileTypeError(MESSAGE_ERROR_FILE_EMPTY)
             setLoadingAlertOpen(false)
+            clearFile()
+            setFileTypeError(MESSAGE_ERROR_FILE_EMPTY)
+            setFileTypeErrorAlertOpen(true)
         }
     }
 
@@ -168,6 +181,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
     }
 
     const handleSecondaryButtonClick = (e) => {
+        setLoadingAlertOpen(false)
         setConfirmAlertOpen(false)
         setFileTypeErrorAlertOpen(false)
         setUploadResultAlertOpen(false)

@@ -111,7 +111,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public List<DeliveryNumberContext> QueryDeliveryNumberContextsWithFileId(int id)
+        public DeliveryNumberContext QueryDeliveryNumberContextWithFileId(int id)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberContext>(sql, new
                 {
                     id = id,
-                }).ToList();
+                }).FirstOrDefault();
             }
             catch
             {
@@ -402,45 +402,42 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public bool InsertDeliveryNumberContexts(List<DeliveryNumberContext> contexts)
+        public bool InsertDeliveryNumberContext(DeliveryNumberContext context)
         {
             try
             {
-                foreach(var context in contexts) {
-                    var sql = @"INSERT INTO [scannel].[dbo].[eaton_delivery_number](
-                                f_delivery_file_id, 
-                                no, 
-                                material_quantity, 
-                                product_quantity, 
-                                start_time, 
-                                end_time, 
-                                valid_pallet_quantity, 
-                                invalid_pallet_quantity, 
-                                state) 
-                                VALUES (
-                                @f_delivery_file_id, 
-                                @no, 
-                                @material_quantity, 
-                                @product_quantity, 
-                                @start_time, 
-                                @end_time, 
-                                @valid_pallet_quantity, 
-                                @invalid_pallet_quantity,
-                                @state) ";
-                    var result = _connection.Execute(sql, new
-                    {
-                        f_delivery_file_id = context.f_delivery_file_id,
-                        no = context.no,
-                        material_quantity = context.material_quantity,
-                        product_quantity = context.product_quantity,
-                        start_time = context.start_time,
-                        end_time = context.end_time,
-                        valid_pallet_quantity = context.valid_pallet_quantity,
-                        invalid_pallet_quantity = context.invalid_pallet_quantity,
-                        state = context.state
-                    }) > 0;
-                    if (!result) { return false; }
-                }
+                var sql = @"INSERT INTO [scannel].[dbo].[eaton_delivery_number](
+                            f_delivery_file_id, 
+                            no, 
+                            material_quantity, 
+                            product_quantity, 
+                            start_time, 
+                            end_time, 
+                            valid_pallet_quantity, 
+                            invalid_pallet_quantity, 
+                            state) 
+                            VALUES (
+                            @f_delivery_file_id, 
+                            @no, 
+                            @material_quantity, 
+                            @product_quantity, 
+                            @start_time, 
+                            @end_time, 
+                            @valid_pallet_quantity, 
+                            @invalid_pallet_quantity,
+                            @state) ";
+                var result = _connection.Execute(sql, new
+                {
+                    f_delivery_file_id = context.f_delivery_file_id,
+                    no = context.no,
+                    material_quantity = context.material_quantity,
+                    product_quantity = context.product_quantity,
+                    start_time = context.start_time,
+                    end_time = context.end_time,
+                    valid_pallet_quantity = context.valid_pallet_quantity,
+                    invalid_pallet_quantity = context.invalid_pallet_quantity,
+                    state = context.state
+                }) > 0;
                 return true;
             }
             catch (Exception exp)

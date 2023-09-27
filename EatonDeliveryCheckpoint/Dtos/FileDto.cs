@@ -9,8 +9,6 @@ namespace EatonDeliveryCheckpoint.Dtos
     public class FileDto
     {
         [JsonProperty(Required = Required.Always)]
-        public string No { get; set; }
-        [JsonProperty(Required = Required.Always)]
         public string Delivery { get; set; }
         [JsonProperty(Required = Required.Always)]
         public string Item { get; set; }

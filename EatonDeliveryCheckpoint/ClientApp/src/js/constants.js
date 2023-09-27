@@ -1,4 +1,4 @@
-﻿export const VERSION = "v0.0.2";
+﻿export const VERSION = "v0.0.3";
 
 export const NAV_TITLE = "CHECKPOINT出貨系統";
 export const NAV_HOME = "首頁";
