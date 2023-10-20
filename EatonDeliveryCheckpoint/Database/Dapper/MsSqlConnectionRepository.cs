@@ -48,6 +48,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             n.product_quantity, 
                             n.start_time, 
                             n.end_time, 
+                            n.pallet_quantity, 
+                            n.miss_pallet_quantity, 
                             n.valid_pallet_quantity, 
                             n.invalid_pallet_quantity, 
                             n.state 
@@ -75,7 +77,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 var sql = @"SELECT 
                             i.delivery, 
                             i.material, 
-                            i.count, 
+                            i.product_count, 
+                            i.pallet_count, 
                             i.realtime_product_count, 
                             i.realtime_pallet_count, 
                             i.alert 
@@ -86,6 +89,32 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberDataDto>(sql, new
                 {
                     no = no,
+                }).ToList();
+            }
+            catch (Exception exp)
+            {
+                return null;
+            }
+        }
+
+        public List<DeliveryFileContext> QueryDeliveryFileContextWithDeliverys(List<string> deliverys)
+        {
+            try
+            {
+                var sql = @"SELECT 
+                            f.id, 
+                            f.name, 
+                            f.upload_timestamp, 
+                            f.json 
+                            FROM [scannel].[dbo].[eaton_delivery_file] AS f 
+                            INNER JOIN [scannel].[dbo].[eaton_delivery_number] AS n 
+                            ON f.id=n.f_delivery_file_id 
+                            INNER JOIN [scannel].[dbo].[eaton_cargo_data] AS d 
+                            ON n.id=d.f_delivery_number_id 
+                            WHERE d.delivery IN @deliverys AND f.name= ";
+                return _connection.Query<DeliveryFileContext>(sql, new
+                {
+                    deliverys = deliverys,
                 }).ToList();
             }
             catch (Exception exp)
@@ -202,11 +231,11 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"SELECT * FROM [scannel].[dbo].[eaton_cargo_data_info] 
-                            WHERE material=@material AND count=@count";
+                            WHERE material=@material AND product_count=@product_count";
                 return _connection.Query<CargoDataInfoContext>(sql, new
                 {
                     material = context.material,
-                    count = context.count,
+                    product_count = context.product_count,
                     alert = context.alert,
                 }).FirstOrDefault();
             }
@@ -269,6 +298,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             n.product_quantity, 
                             n.start_time, 
                             n.end_time, 
+                            n.pallet_quantity, 
+                            n.miss_pallet_quantity, 
                             n.valid_pallet_quantity, 
                             n.invalid_pallet_quantity, 
                             n.state 
@@ -294,13 +325,15 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"SELECT 
-                            f.name, 
+                            f.name AS file_name, 
                             f.upload_timestamp, 
                             n.no, 
                             n.material_quantity, 
                             n.product_quantity, 
                             n.start_time, 
                             n.end_time, 
+                            n.pallet_quantity, 
+                            n.miss_pallet_quantity, 
                             n.valid_pallet_quantity, 
                             n.invalid_pallet_quantity, 
                             n.state 
@@ -315,7 +348,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     no = no,
                 }).FirstOrDefault();
             }
-            catch
+            catch (Exception exp)
             {
                 return null;
             }
@@ -328,18 +361,19 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 var sql = @"SELECT 
                             i.delivery, 
                             i.material, 
-                            i.count, 
+                            i.product_count, 
+                            i.pallet_count, 
                             i.realtime_product_count, 
                             i.realtime_pallet_count, 
                             i.alert 
                             FROM [scannel].[dbo].[eaton_delivery_number] AS n 
                             INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
                             ON n.id=i.f_delivery_number_id 
-                            WHERE n.no=@no AND i.count>@count ";
+                            WHERE n.no=@no AND i.product_count>@product_count ";
                 return _connection.Query<DeliveryNumberDataDto>(sql, new
                 {
                     no = no,
-                    count = 0,
+                    product_count = -1,
                 }).ToList();
             }
             catch
@@ -355,7 +389,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 var sql = @"SELECT 
                             i.delivery, 
                             i.material, 
-                            i.count, 
+                            i.product_count, 
+                            i.pallet_count, 
                             d.qty AS realtime_product_count, 
                             1 AS realtime_pallet_count, 
                             1 AS alert  
@@ -413,6 +448,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             product_quantity, 
                             start_time, 
                             end_time, 
+                            pallet_quantity, 
+                            miss_pallet_quantity, 
                             valid_pallet_quantity, 
                             invalid_pallet_quantity, 
                             state) 
@@ -423,6 +460,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             @product_quantity, 
                             @start_time, 
                             @end_time, 
+                            @pallet_quantity, 
+                            @miss_pallet_quantity,
                             @valid_pallet_quantity, 
                             @invalid_pallet_quantity,
                             @state) ";
@@ -434,6 +473,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     product_quantity = context.product_quantity,
                     start_time = context.start_time,
                     end_time = context.end_time,
+                    pallet_quantity = context.pallet_quantity,
+                    miss_pallet_quantity = context.miss_pallet_quantity,
                     valid_pallet_quantity = context.valid_pallet_quantity,
                     invalid_pallet_quantity = context.invalid_pallet_quantity,
                     state = context.state
@@ -457,20 +498,23 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                 delivery, 
                                 item, 
                                 material, 
-                                quantity) 
+                                quantity, 
+                                unit) 
                                 VALUES( 
                                 @f_delivery_number_id, 
                                 @delivery, 
                                 @item, 
                                 @material, 
-                                @quantity) ";
+                                @quantity, 
+                                @unit) ";
                     var result = _connection.Execute(sql, new
                     {
                         f_delivery_number_id = context.f_delivery_number_id,
                         delivery = context.delivery,
                         item = context.item,
                         material = context.material,
-                        quantity = context.quantity
+                        quantity = context.quantity,
+                        unit = context.unit,
                     }) > 0;
                     if (!result) { return false; }
                 }
@@ -492,7 +536,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                 f_delivery_number_id, 
                                 delivery, 
                                 material, 
-                                count, 
+                                product_count, 
+                                pallet_count, 
                                 realtime_product_count, 
                                 realtime_pallet_count, 
                                 alert)  
@@ -500,7 +545,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                 @f_delivery_number_id, 
                                 @delivery, 
                                 @material, 
-                                @count, 
+                                @product_count, 
+                                @pallet_count, 
                                 @realtime_product_count, 
                                 @realtime_pallet_count, 
                                 @alert) ";
@@ -509,7 +555,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                         f_delivery_number_id = context.f_delivery_number_id,
                         delivery = context.delivery, 
                         material = context.material,
-                        count = context.count,
+                        product_count = context.product_count,
+                        pallet_count = context.pallet_count,
                         realtime_product_count = context.realtime_product_count,
                         realtime_pallet_count = context.realtime_pallet_count,
                         alert = context.alert,
@@ -532,7 +579,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             f_delivery_number_id, 
                             delivery, 
                             material, 
-                            count, 
+                            product_count, 
+                            pallet_count, 
                             realtime_product_count, 
                             realtime_pallet_count, 
                             alert)  
@@ -540,7 +588,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             @f_delivery_number_id, 
                             @delivery, 
                             @material, 
-                            @count, 
+                            @product_count, 
+                            @pallet_count, 
                             @realtime_product_count, 
                             @realtime_pallet_count, 
                             @alert) ";
@@ -549,7 +598,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     f_delivery_number_id = context.f_delivery_number_id,
                     delivery = context.delivery,
                     material = context.material,
-                    count = context.count,
+                    product_count = context.product_count,
+                    pallet_count = context.pallet_count,
                     realtime_product_count = context.realtime_product_count,
                     realtime_pallet_count = context.realtime_pallet_count,
                     alert = context.alert,
@@ -623,11 +673,12 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_number] 
-                            SET end_time=@end_time, state=@state 
+                            SET end_time=@end_time, state=@state, miss_pallet_quantity=@miss_pallet_quantity 
                             WHERE no=@no ";
                 return _connection.Execute(sql, new
                 {
                     end_time = dto.end_time,
+                    miss_pallet_quantity = dto.miss_pallet_quantity,
                     state = dto.state,
                     no = dto.no,
                 }) > 0;
@@ -643,13 +694,14 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             try
             {
                 var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_number] 
-                            SET valid_pallet_quantity=@valid_pallet_quantity, invalid_pallet_quantity=@invalid_pallet_quantity 
+                            SET valid_pallet_quantity=@valid_pallet_quantity, invalid_pallet_quantity=@invalid_pallet_quantity, miss_pallet_quantity=@miss_pallet_quantity 
                             WHERE id=@id ";
                 return _connection.Execute(sql, new
                 {
                     id = context.id,
                     valid_pallet_quantity = context.valid_pallet_quantity,
                     invalid_pallet_quantity = context.invalid_pallet_quantity,
+                    miss_pallet_quantity = context.miss_pallet_quantity,
                 }) > 0;
             }
             catch (Exception exp)

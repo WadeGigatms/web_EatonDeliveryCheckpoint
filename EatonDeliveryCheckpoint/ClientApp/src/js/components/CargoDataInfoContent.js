@@ -14,6 +14,8 @@ import {
     TABLE_START_TIME,
     TABLE_END_TIME,
     TABLE_DURATION,
+    TABLE_PALLET_QTY,
+    TABLE_MISS_PALLET_QTY,
     TABLE_VALID_PALLET_QTY,
     TABLE_INVALID_PALLET_QTY,
     TABLE_PALLET_RATE,
@@ -27,6 +29,8 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
     const [startTime, setStartTime] = useState("-")
     const [endTime, setEndTime] = useState("-")
     const [duration, setDuration] = useState("-")
+    const [palletQuantity, setPalletQuantity] = useState("-")
+    const [missPalletQuantity, setMissPalletQuantity] = useState("-")
     const [validPalletQuantity, setValidPalletQuantity] = useState("-")
     const [invalidPalletQuantity, setInvalidPalletQuantity] = useState("-")
     const [rate, setRate] = useState("-")
@@ -49,13 +53,15 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
             const durationTime = String(duration.hours()).padStart(2, "0") + ":" + String(duration.minutes()).padStart(2, "0") + ":" + String(duration.seconds()).padStart(2, "0")
             const validCount = parseFloat(selectedDeliveryCargoDto.valid_pallet_quantity)
             const invalidCount = parseFloat(selectedDeliveryCargoDto.invalid_pallet_quantity)
-            const rate = (validCount + invalidCount === 0) ? 0 : 100 * validCount / (validCount + invalidCount)
+            const rate = (validCount + invalidCount === 0) ? 0 : Math.round(100 * validCount / (validCount + invalidCount))
 
             setNo(selectedDeliveryCargoDto.no)
             setDate(date)
             setStartTime(startTime)
             setEndTime(endTime)
             setDuration(durationTime)
+            setPalletQuantity(selectedDeliveryCargoDto.pallet_quantity)
+            setMissPalletQuantity(selectedDeliveryCargoDto.miss_pallet_quantity)
             setValidPalletQuantity(validCount)
             setInvalidPalletQuantity(invalidCount)
             setRate(rate + "%")
@@ -65,6 +71,8 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
             setStartTime("-")
             setEndTime("-")
             setDuration("-")
+            setPalletQuantity("-")
+            setMissPalletQuantity("-")
             setValidPalletQuantity("-")
             setInvalidPalletQuantity("-")
             setRate("-")
@@ -98,6 +106,14 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
                         <TableRow>
                             <TableCell>{TABLE_DURATION}</TableCell>
                             <TableCell align="right">{duration}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_PALLET_QTY}</TableCell>
+                            <TableCell align="right">{palletQuantity}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>{TABLE_MISS_PALLET_QTY}</TableCell>
+                            <TableCell align="right">{missPalletQuantity}</TableCell>
                         </TableRow>
                         <TableRow>
                             <TableCell>{TABLE_VALID_PALLET_QTY}</TableCell>

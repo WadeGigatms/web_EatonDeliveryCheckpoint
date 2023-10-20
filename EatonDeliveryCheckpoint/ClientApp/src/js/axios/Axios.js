@@ -22,5 +22,4 @@ export const axiosDeliverySearchGetApi = (delivery) => axiosRequest.get("/search
 export const axiosDeliveryStartPostApi = (data) => axiosRequest.post("/start", data);
 export const axiosDeliveryFinishPostApi = (data) => axiosRequest.post("/finish", data);
 export const axiosDeliveryDismissAlertPostApi = (data) => axiosRequest.post("/dismissalert", data);
-export const axiosDeliveryQuitPostApi = (data) => axiosRequest.post("/quit", data);
 export const axiosDeliveryDisablePostApi = (data) => axiosRequest.post("/disable", data);

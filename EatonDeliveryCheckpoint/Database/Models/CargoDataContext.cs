@@ -13,5 +13,6 @@ namespace EatonDeliveryCheckpoint.Database
         public string item { get; set; }
         public string material { get; set; }
         public int quantity { get; set; }
+        public int unit { get; set; }
     }
 }

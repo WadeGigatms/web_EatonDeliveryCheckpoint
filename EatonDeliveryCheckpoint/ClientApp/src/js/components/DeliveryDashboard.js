@@ -31,12 +31,11 @@ import {
     axiosDeliveryStartPostApi,
     axiosDeliveryFinishPostApi,
     axiosDeliveryDismissAlertPostApi,
-    axiosDeliveryQuitPostApi,
     axiosDeliveryReviewGetApi
 } from '../axios/Axios';
 
 const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi }) => {
-    const [deliveryStep, setDeliveryStep] = useState(0) // 0: unchecked, 1: checked, 2: deliverying, 3: finish and search, 4: edit to delete, -1: alert or pause
+    const [deliveryStep, setDeliveryStep] = useState(0) // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [startAlertOpen, setStartAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
@@ -68,8 +67,8 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     useEffect(() => {
         if (selectedDeliveryNumberDto) {
             // Examine alert
-            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count === -1 && data.alert === 1 && data.delivery === "-")
-            const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.count < data.realtime_product_count && data.alert === 1)
+            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.alert === 1 && data.delivery === "-")
+            const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
             if (invalidMaterialDataDto && deliveryStep === 2) {
                 setInvalidMaterialAlertOpen(true)
             } else if (invalidQtyDataDto && deliveryStep === 2) {
@@ -81,10 +80,14 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                 setValidDatas(selectedDeliveryNumberDto.datas)
                 setInvalidDatas(null)
             } else if (deliveryStep === 3) {
-                const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.count > 0 && data.delivery !== "-" && data.count === data.realtime_product_count)
-                const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.count < 0 || data.delivery === "-" || data.alert === 1)
+                const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count > -1 && data.delivery !== "-" && data.alert === 0)
+                const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
                 setValidDatas(validDatas)
                 setInvalidDatas(invalidDatas)
+                console.log("1")
+                console.log(validDatas)
+                console.log(invalidDatas)
+
             }
         } else {
             setValidDatas(null)
@@ -177,7 +180,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     const handleQuitButtonClick = () => {
         setQuitAlertOpen(false)
         setDeliveryStep(3)
-        requestQuitPostApi()
+        requestFinishPostApi()
     }
 
     const handleFinishButtonClick = () => {
@@ -196,7 +199,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
         setPauseAlertOpen(false)
         setPauseMessage("")
         setDeliveryStep(3)
-        requestQuitPostApi()
+        requestFinishPostApi()
     }
 
     const handleContinueButtonClick = () => {
@@ -214,7 +217,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
             var realtimeCount = 0
             for (var i = 0; i < selectedDeliveryCargoDto.datas.length; i++) {
                 var data = selectedDeliveryCargoDto.datas[i]
-                if (data.count > -1 && data.alert === 0) {
+                if (data.product_count > -1 && data.alert === 0) {
                     realtimeCount += data.realtime_product_count
                 }
             }
@@ -251,25 +254,6 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
             return "success"
         }
         return "primary"
-    }
-
-    async function requestQuitPostApi() {
-        setLoadingAlertOpen(true)
-        try {
-            if (deliveryNumberDtos) {
-                const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
-                const json = JSON.stringify(deliveryingNumberDto)
-                const response = await axiosDeliveryQuitPostApi(json)
-                if (response.data.result === true) {
-                    requestReviewGetApi(deliveryingNumberDto.no)
-                    requestGetApi()
-                }
-            }
-        } catch (error) {
-            console.log("requestQuitPostApi error")
-            console.log(error)
-        }
-        setLoadingAlertOpen(false)
     }
 
     async function requestDismissAlertPostApi() {
@@ -330,7 +314,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                 }
             }
         } catch (error) {
-            console.log("axiosDeliverySearchGetApi error")
+            console.log("requestReviewGetApi error")
             console.log(error)
         }
         setLoadingAlertOpen(false)

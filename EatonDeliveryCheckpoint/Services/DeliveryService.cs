@@ -157,15 +157,18 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Query DeliveryCargoDataDto matches no
-            foreach (var deliveryNumberDto in deliveryNumberDtos)
+            if (deliveryNumberDtos.Count > 0)
             {
-                List<DeliveryNumberDataDto> deliveryNumberDataDtos = _connection.QueryDeliveryNumberDataDtos(deliveryNumberDto.no);
-                if (deliveryNumberDataDtos == null)
+                foreach (var deliveryNumberDto in deliveryNumberDtos)
                 {
-                    // No available data in database
-                    return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.None, null);
+                    List<DeliveryNumberDataDto> deliveryNumberDataDtos = _connection.QueryDeliveryNumberDataDtos(deliveryNumberDto.no);
+                    if (deliveryNumberDataDtos == null)
+                    {
+                        // No available data in database
+                        return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.None, null);
+                    }
+                    deliveryNumberDto.datas = deliveryNumberDataDtos;
                 }
-                deliveryNumberDto.datas = deliveryNumberDataDtos;
             }
 
             // Update cache
@@ -230,8 +233,8 @@ namespace EatonDeliveryCheckpoint.Services
             DeliveryNumberDataDto alertDeliveryNumberDataDto = deliveryingNumberDto.datas.Where(data => data.alert == 1).FirstOrDefault();
             if (alertDeliveryNumberDataDto != null)
             {
-                if (alertDeliveryNumberDataDto.count > -1 &&
-                    alertDeliveryNumberDataDto.count < alertDeliveryNumberDataDto.realtime_product_count)
+                if (alertDeliveryNumberDataDto.product_count > -1 &&
+                    alertDeliveryNumberDataDto.product_count < alertDeliveryNumberDataDto.realtime_product_count)
                 {
                     // Over qty
                     UpdateDeliveryNumberDataDtoToRemoveInvalidQty(ref deliveryingNumberDto, alertDeliveryNumberDataDto);
@@ -248,7 +251,7 @@ namespace EatonDeliveryCheckpoint.Services
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext, qty);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
                 }
-                else if (alertDeliveryNumberDataDto.count == -1)
+                else if (alertDeliveryNumberDataDto.product_count == -1)
                 {
                     // Miss match material
                     UpdateDeliveryCargoDataDtoToRemoveInvalidMaterial(ref deliveryingNumberDto, alertDeliveryNumberDataDto);
@@ -324,7 +327,7 @@ namespace EatonDeliveryCheckpoint.Services
             {
                 // Valid material
 
-                if (matchedMaterialDeliveryNumberDataDto.count < matchedMaterialDeliveryNumberDataDto.realtime_product_count + dto.qty)
+                if (matchedMaterialDeliveryNumberDataDto.product_count < matchedMaterialDeliveryNumberDataDto.realtime_product_count + dto.qty)
                 {
                     // [ERROR]
                     // Update deliveryingCargoDto and deliveryCargoDtos in cache
@@ -361,7 +364,7 @@ namespace EatonDeliveryCheckpoint.Services
 
                     // Update database
                     DeliveryNumberContext deliveryNumberContext = _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
-                    deliveryNumberContext.valid_pallet_quantity += 1;
+                    UpdateDeliveryNumberContextWithValidQty(ref deliveryNumberContext);
                     result = _connection.UpdateDeliveryNumberContextWhenDataInserted(deliveryNumberContext);
 
                     CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryNumberContext.id, dto.pn);
@@ -530,6 +533,14 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetResultDto(ResultEnum.False, ErrorEnum.DuplicatedFileName);
             }
 
+            // Check for duplicated delivery
+            var deliverys = dto.FileData.Select(d => d.Delivery).ToList();
+            List<DeliveryFileContext> duplicatedFileContexts = _connection.QueryDeliveryFileContextWithDeliverys(deliverys);
+            if (duplicatedFileContexts != null)
+            {
+                return GetResultDto(ResultEnum.False, ErrorEnum.DuplicatedDelivery);
+            }
+
             // Insert into [eaton_delivery_file]
             DeliveryFileContext insertDeliveryFileContext = GetDeliveryFileContext(dto);
             result = _connection.InsertDeliveryFileContext(insertDeliveryFileContext);
@@ -624,6 +635,7 @@ namespace EatonDeliveryCheckpoint.Services
             List<DeliveryNumberContext> contexts = new List<DeliveryNumberContext>();
             int productCount = dto.FileData.Sum(f => int.Parse(f.Quantity));
             int materialCount = dto.FileData.GroupBy(f => f.Material).Count();
+            int palletCount = dto.FileData.Sum(f => (int)Math.Ceiling(decimal.ToDouble(int.Parse(f.Quantity)) / decimal.ToDouble(int.Parse(f.Unit))));
             return new DeliveryNumberContext
             {
                 f_delivery_file_id = id,
@@ -632,6 +644,8 @@ namespace EatonDeliveryCheckpoint.Services
                 product_quantity = productCount,
                 start_time = "",
                 end_time = "",
+                pallet_quantity = palletCount,
+                miss_pallet_quantity = palletCount,
                 valid_pallet_quantity = 0,
                 invalid_pallet_quantity = 0,
                 state = -1,
@@ -650,6 +664,7 @@ namespace EatonDeliveryCheckpoint.Services
                     item = data.Item,
                     material = data.Material,
                     quantity = int.Parse(data.Quantity),
+                    unit = int.Parse(data.Unit)
                 });
             }
             return contexts;
@@ -663,7 +678,8 @@ namespace EatonDeliveryCheckpoint.Services
                 f_delivery_number_id = context.Select(c => c.f_delivery_number_id).FirstOrDefault(),
                 delivery = context.Select(c => c.delivery).FirstOrDefault(),
                 material = context.Key,
-                count = context.Sum(d => d.quantity),
+                product_count = context.Sum(c => c.quantity),
+                pallet_count = (int)Math.Ceiling(decimal.ToDouble(context.Sum(c => c.quantity))/decimal.ToDouble(context.Select(c => c.unit).FirstOrDefault())),
             });
             foreach (var groupByMaterialContext in groupByMaterialContexts)
             {
@@ -672,7 +688,8 @@ namespace EatonDeliveryCheckpoint.Services
                     f_delivery_number_id = groupByMaterialContext.f_delivery_number_id,
                     delivery = groupByMaterialContext.delivery,
                     material = groupByMaterialContext.material,
-                    count = groupByMaterialContext.count,
+                    product_count = groupByMaterialContext.product_count,
+                    pallet_count = groupByMaterialContext.pallet_count,
                     realtime_product_count = 0,
                     realtime_pallet_count = 0,
                     alert = 0,
@@ -689,7 +706,8 @@ namespace EatonDeliveryCheckpoint.Services
                 f_delivery_number_id = id,
                 delivery = "-",
                 material = dto.pn,
-                count = -1,
+                product_count = -1,
+                pallet_count = -1,
                 realtime_product_count = dto.qty,
                 realtime_pallet_count = 1,
                 alert = 1,
@@ -733,6 +751,13 @@ namespace EatonDeliveryCheckpoint.Services
         private void UpdateDeliveryNumberDtoWithValidQty(ref DeliveryNumberDto dto)
         {
             dto.valid_pallet_quantity += 1;
+            dto.miss_pallet_quantity -= 1;
+        }
+
+        private void UpdateDeliveryNumberContextWithValidQty(ref DeliveryNumberContext context)
+        {
+            context.valid_pallet_quantity += 1;
+            context.miss_pallet_quantity -= 1;
         }
 
         private void UpdateDeliveryNumberDtoWithInvalidPallet(ref DeliveryNumberDto dto)
@@ -759,7 +784,8 @@ namespace EatonDeliveryCheckpoint.Services
             {
                 delivery = "-",
                 material = postDto.pn,
-                count = -1,
+                product_count = -1,
+                pallet_count = -1,
                 realtime_product_count = postDto.qty,
                 realtime_pallet_count = 1,
                 alert = 1

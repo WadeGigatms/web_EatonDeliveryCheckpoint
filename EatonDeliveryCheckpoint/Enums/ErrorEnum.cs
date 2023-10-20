@@ -10,6 +10,7 @@ namespace EatonDeliveryCheckpoint.Enums
         None,
         InvalidProperties,
         DuplicatedFileName,
+        DuplicatedDelivery,
         FailedToAccessDatabase,
     }
 
@@ -25,6 +26,8 @@ namespace EatonDeliveryCheckpoint.Enums
                     return "InvalidProperties";
                 case ErrorEnum.DuplicatedFileName:
                     return "DuplicatedFileName";
+                case ErrorEnum.DuplicatedDelivery:
+                    return "DuplicatedDelivery";
                 case ErrorEnum.FailedToAccessDatabase:
                     return "FailedToAccessDatabase";
                 default:
@@ -42,6 +45,8 @@ namespace EatonDeliveryCheckpoint.Enums
                     return "資料欄位錯誤";
                 case ErrorEnum.DuplicatedFileName:
                     return "檔案重複";
+                case ErrorEnum.DuplicatedDelivery:
+                    return "Delivery重複";
                 case ErrorEnum.FailedToAccessDatabase:
                     return "資料庫存取錯誤";
                 default:

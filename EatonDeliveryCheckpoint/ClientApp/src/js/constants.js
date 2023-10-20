@@ -1,4 +1,4 @@
-﻿export const VERSION = "v0.0.3";
+﻿export const VERSION = "v0.0.4";
 
 export const NAV_TITLE = "CHECKPOINT出貨系統";
 export const NAV_HOME = "首頁";
@@ -56,14 +56,17 @@ export const TABLE_MATERIAL_QTY = "料號總數";
 export const TABLE_PRODUCT_QTY = "產品總數";
 export const TABLE_UPLOAD_TIME = "上傳時間";
 export const TABLE_MATERIAL = "料號";
-export const TABLE_TARGET_MATERIAL_QTY = "目標出貨數量";
-export const TABLE_REALTIME_MATERIAL_QTY = "實際出貨數量";
-export const TABLE_REALTIME_PALLET_QTY = "實際棧板數量";
+export const TABLE_TARGET_MATERIAL_QTY = "目標出貨";
+export const TABLE_TARGET_PALLET_QTY = "目標板數";
+export const TABLE_REALTIME_MATERIAL_QTY = "實際出貨";
+export const TABLE_REALTIME_PALLET_QTY = "實際板數";
 export const TABLE_NO = "貨櫃編碼";
 export const TABLE_DATE = "日期";
 export const TABLE_START_TIME = "開始時間";
 export const TABLE_END_TIME = "結束時間";
 export const TABLE_DURATION = "作業時長";
+export const TABLE_PALLET_QTY = "目標總棧板數量";
+export const TABLE_MISS_PALLET_QTY = "未入系統棧板數量";
 export const TABLE_VALID_PALLET_QTY = "實際正確棧板數量";
 export const TABLE_INVALID_PALLET_QTY = "實際錯誤棧板數量";
 export const TABLE_PALLET_RATE = "棧板正確率";

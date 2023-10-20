@@ -30,6 +30,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public DeliveryFileContext QueryDeliveryFileContextWithFileName(string fileName)
             => MsSqlConnectionRepository.QueryDeliveryFileContextWithFileName(fileName);
 
+        public List<DeliveryFileContext> QueryDeliveryFileContextWithDeliverys(List<string> deliverys)
+            => MsSqlConnectionRepository.QueryDeliveryFileContextWithDeliverys(deliverys);
+
         public DeliveryNumberContext QueryDeliveryNumberContextWithFileId(int id)
             => MsSqlConnectionRepository.QueryDeliveryNumberContextWithFileId(id);
 

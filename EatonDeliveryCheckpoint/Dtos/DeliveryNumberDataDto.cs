@@ -9,7 +9,8 @@ namespace EatonDeliveryCheckpoint.Dtos
     {
         public string delivery { get; set; }
         public string material { get; set; }
-        public int count { get; set; }
+        public int product_count { get; set; }
+        public int pallet_count { get; set; }
         public int realtime_product_count { get; set; }
         public int realtime_pallet_count { get; set; }
         public int alert { get; set; }

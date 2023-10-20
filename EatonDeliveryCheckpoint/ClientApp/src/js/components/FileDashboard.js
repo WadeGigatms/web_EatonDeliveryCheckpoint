@@ -128,19 +128,13 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             worksheet.B1.w = "Item"
             worksheet.C1.w = "Material"
             worksheet.D1.w = "Quantity"
-            if (worksheet.E1) {
+            worksheet.E1.w = "Unit"
+            if (worksheet.F1) {
                 clearFile()
                 setFileTypeError(MESSAGE_ERROR_FILE_TYPE)
                 setFileTypeErrorAlertOpen(true)
                 return
             }
-            /*
-            worksheet.A1.w = "No"
-            worksheet.B1.w = "Delivery"
-            worksheet.C1.w = "Item"
-            worksheet.D1.w = "Material"
-            worksheet.E1.w = "Quantity"
-            */
             const data = XLSX.utils.sheet_to_json(worksheet)
             setFileData(data)
             setLoadingAlertOpen(false)
