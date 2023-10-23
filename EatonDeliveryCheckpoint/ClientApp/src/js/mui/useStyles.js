@@ -4,18 +4,18 @@ import { alpha } from "@mui/material";
 export const useStyles = makeStyles({
     "@keyframes blinker": {
         from: {
-            backgroundColor: alpha("#76ff03", 1)
+            backgroundColor: alpha("#76ff03", 0.75)
         },
         to: {
-            backgroundColor: alpha("#76ff03", 0.3)
+            backgroundColor: alpha("#76ff03", 0.25)
         }
     },
     "@keyframes invalidBlinker": {
         from: {
-            backgroundColor: alpha("#ff1744", 1)
+            backgroundColor: alpha("#ff1744", 0.75)
         },
         to: {
-            backgroundColor: alpha("#ff1744", 0.3)
+            backgroundColor: alpha("#ff1744", 0.25)
         }
     },
     blinker: {

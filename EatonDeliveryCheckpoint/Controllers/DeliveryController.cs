@@ -81,14 +81,6 @@ namespace EatonDeliveryCheckpoint.Controllers
             return dto.Result == true ? Ok(dto) : BadRequest(dto);
         }
 
-        // POST api/<DeliveryController>
-        [HttpPost("quit")]
-        public IActionResult PostToQuit([FromBody] dynamic value)
-        {
-            ResultDto dto = (ResultDto)_service.PostToQuit(value);
-            return dto.Result == true ? Ok(dto) : BadRequest(dto);
-        }
-
         // DELETE api/<DeliveryController>
         [HttpPost("disable")]
         public IActionResult PostToDisable([FromBody] dynamic value)

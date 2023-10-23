@@ -3,7 +3,6 @@ import CargoContent from './CargoContent';
 import CargoDataContent from './CargoDataContent';
 import CargoDataInfoContent from './CargoDataInfoContent';
 import MuiFormDialog from "./MuiFormDialog";
-import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
 import {
     TABLE_REALTIME_MATERIAL,
@@ -11,7 +10,6 @@ import {
     MESSAGE_SEARCH_DN,
     BTN_CONFIRM,
     BTN_SEARCH,
-    BTN_PRINT
 } from '../constants';
 import { Stack, Button } from '@mui/material';
 import {
@@ -37,9 +35,6 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
             const invalidRows = selectedDeliveryNumberDto.datas.filter((data) => data.alert === 1)
             setValidDatas(validRows)
             setInvalidDatas(invalidRows)
-            console.log(selectedDeliveryNumberDto.datas)
-            console.log(validRows)
-            console.log(invalidRows)
         } else {
             setValidDatas(null)
             setInvalidDatas(null)
@@ -55,15 +50,10 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
 
     const handlePrimaryButtonClick = (e) => {
         if (value !== "" && helperText === "") {
-            setSearchFormAlertOpen(false)
             setValue("")
             setHelperText("")
             requestSearchGetApi()
         }
-    }
-
-    const handlePrintButtonClick = (e) => {
-
     }
 
     const handleCloseButtonClick = (e) => {
@@ -79,6 +69,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
             if (response.data.result === true) {
                 const deliveryNumberDtos = response.data.deliveryNumberDtos
                 if (deliveryNumberDtos != null) {
+                    setSearchFormAlertOpen(false)
                     setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
                 } else {
                     setSelectedDeliveryNumberDto(null)
@@ -87,6 +78,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
         } catch (error) {
             console.log("axiosDeliverySearchGetApi error")
             console.log(error)
+            setHelperText(error.response.data.error)
         }
         setLoadingAlertOpen(false)
     }

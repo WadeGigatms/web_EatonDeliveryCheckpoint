@@ -16,32 +16,27 @@ import {
     TABLE_REALTIME_PALLET_QTY,
 } from '../constants';
 import { usePrevious } from '../hooks/usePrevious';
-import { useStyles } from '../hooks/useStyles';
+import { useStyles } from '../mui/useStyles';
 
 const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
-    const [highlightRow, setHighlightRow] = useState(-1)
+    const [highlightIndex, setHighlightIndex] = useState(-1)
     const previousDatas = usePrevious(datas)
     const { blinker, invalidBlinker } = useStyles()
 
     useEffect(() => {
-        console.log(datas)
-        console.log(previousDatas)
         if (deliveryStep === 2 && previousDatas !== undefined && previousDatas !== null) {
             if (previousDatas.length !== datas.length) {
-                setHighlightRow(datas.length - 1)
-                console.log("BANG")
+                setHighlightIndex(datas.length - 1)
             } else {
                 for (var i = 0; i < datas.length; i++) {
                     if (previousDatas[i].realtime_pallet_count < datas[i].realtime_pallet_count) {
-                        setHighlightRow(i)
-                        console.log("BANG BANG")
-                        console.log(i)
+                        setHighlightIndex(i)
                         return
                     }
                 }
             }
         }
-    }, [deliveryStep, datas])
+    }, [deliveryStep, datas, previousDatas])
 
     return <div className={"card card-primary " + className}>
         <div className="card-header">{title}</div>
@@ -73,9 +68,8 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                         backgroundColor = ""
                                     }
 
-                                    if (index === highlightRow) {
+                                    if (index === highlightIndex) {
                                         classname = row.alert === 0 ? `${blinker}` : `${invalidBlinker}`
-                                        console.log(classname)
                                     } else {
                                         classname = ""
                                     }

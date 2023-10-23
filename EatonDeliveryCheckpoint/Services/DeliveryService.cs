@@ -71,7 +71,7 @@ namespace EatonDeliveryCheckpoint.Services
             DeliveryNumberDto deliveryNumberDto = _connection.QueryDeliveryNumberDtoWithDelivery(delivery);
             if (deliveryNumberDto == null)
             {
-                return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.InvalidProperties, null);
+                return GetDeliveryNumberResultDto(ResultEnum.False, ErrorEnum.NoData, null);
             }
             deliveryNumberDto.datas = new List<DeliveryNumberDataDto>();
             List<DeliveryNumberDataDto> validDeliveryNumberDataDtos = _connection.QueryValidDeliveryNumberDataDtos(deliveryNumberDto.no);
@@ -471,36 +471,6 @@ namespace EatonDeliveryCheckpoint.Services
             }
 
             // Save to cache
-            _localMemoryCache.SaveCacheDidChange(true);
-
-            return GetResultDto(ResultEnum.True, ErrorEnum.None);
-        }
-
-        public ResultDto PostToQuit(dynamic value)
-        {
-            DeliveryNumberDto dto;
-            bool result;
-
-            // Check value
-            try
-            {
-                var settings = new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Include,
-                    MissingMemberHandling = MissingMemberHandling.Error
-                };
-                dto = JsonConvert.DeserializeObject<DeliveryNumberDto>(value.ToString(), settings);
-            }
-            catch (Exception exp)
-            {
-                return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
-            }
-
-            // Update database
-            UpdateDeliveryNumberDtoWhenFinish(ref dto);
-            result = _connection.UpdateDeliveryNumberContextWhenFinish(dto);
-
-            // Update cache
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetResultDto(ResultEnum.True, ErrorEnum.None);

@@ -8,6 +8,7 @@ namespace EatonDeliveryCheckpoint.Enums
     public enum ErrorEnum
     {
         None,
+        NoData,
         InvalidProperties,
         DuplicatedFileName,
         DuplicatedDelivery,
@@ -22,6 +23,8 @@ namespace EatonDeliveryCheckpoint.Enums
             {
                 case ErrorEnum.None:
                     return "";
+                case ErrorEnum.NoData:
+                    return "NoData";
                 case ErrorEnum.InvalidProperties:
                     return "InvalidProperties";
                 case ErrorEnum.DuplicatedFileName:
@@ -41,6 +44,8 @@ namespace EatonDeliveryCheckpoint.Enums
             {
                 case ErrorEnum.None:
                     return "";
+                case ErrorEnum.NoData:
+                    return "無資料";
                 case ErrorEnum.InvalidProperties:
                     return "資料欄位錯誤";
                 case ErrorEnum.DuplicatedFileName:

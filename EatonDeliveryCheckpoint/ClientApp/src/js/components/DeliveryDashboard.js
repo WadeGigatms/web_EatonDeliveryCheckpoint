@@ -84,10 +84,6 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                 const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
                 setValidDatas(validDatas)
                 setInvalidDatas(invalidDatas)
-                console.log("1")
-                console.log(validDatas)
-                console.log(invalidDatas)
-
             }
         } else {
             setValidDatas(null)
@@ -195,13 +191,6 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
         requestDismissAlertPostApi()
     }
 
-    const handleQuitFromPauseButtonClick = () => {
-        setPauseAlertOpen(false)
-        setPauseMessage("")
-        setDeliveryStep(3)
-        requestFinishPostApi()
-    }
-
     const handleContinueButtonClick = () => {
         setPauseAlertOpen(false)
         setDeliveryStep(2)
@@ -210,6 +199,13 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
             const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
             setSelectedDeliveryNumberDto(deliveryingNumberDto)
         }
+    }
+
+    const handleQuitFromPauseButtonClick = () => {
+        setPauseAlertOpen(false)
+        setPauseMessage("")
+        setDeliveryStep(3)
+        requestFinishPostApi()
     }
 
     function didFinishDelivery(selectedDeliveryCargoDto) {
