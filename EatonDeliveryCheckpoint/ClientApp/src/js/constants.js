@@ -1,4 +1,4 @@
-﻿export const VERSION = "v0.0.4";
+﻿export const VERSION = "v0.0.5";
 
 export const NAV_TITLE = "CHECKPOINT出貨系統";
 export const NAV_HOME = "首頁";
@@ -9,7 +9,8 @@ export const MESSAGE_FILE_UPLOAD = "進行上傳?";
 export const MESSAGE_DELETE_FILE = "刪除檔案?";
 export const MESSAGE_DELIVERY_START = "開始出貨?";
 export const MESSAGE_DELIVERY_QUIT = "退出出貨?";
-export const MESSAGE_ERROR_FILE_TYPE = "錯誤檔案格式!請上傳Excel檔!";
+export const MESSAGE_ERROR_FILE_TYPE = "檔案格式錯誤!請上傳Excel檔!";
+export const MESSAGE_ERROR_HEADER = "資料欄位錯誤!";
 export const MESSAGE_ERROR_FILE_EMPTY = "無檔案";
 export const MESSAGE_ERROR_UPLOAD = "上傳失敗";
 export const MESSAGE_SUCCEED_UPLOAD = "上傳成功";

@@ -8,6 +8,7 @@ import MuiConfirmDialog from "./MuiConfirmDialog";
 import MuiAlertDialog from "./MuiAlertDialog";
 import MuiProgress from "./MuiProgress";
 import {
+    MESSAGE_ERROR_HEADER,
     MESSAGE_ERROR_FILE_TYPE,
     MESSAGE_ERROR_FILE_EMPTY,
     MESSAGE_ERROR_UPLOAD,
@@ -121,23 +122,33 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
     const handlePreviewFileData = (file) => {
         setLoadingAlertOpen(true)
         if (file !== null) {
-            const workbook = XLSX.read(file, { type: 'buffer' })
-            const worksheetName = workbook.SheetNames[0]
-            const worksheet = workbook.Sheets[worksheetName]
-            worksheet.A1.w = "Delivery"
-            worksheet.B1.w = "Item"
-            worksheet.C1.w = "Material"
-            worksheet.D1.w = "Quantity"
-            worksheet.E1.w = "Unit"
-            if (worksheet.F1) {
+            try {
+                const workbook = XLSX.read(file, { type: 'buffer' })
+                const worksheetName = workbook.SheetNames[0]
+                const worksheet = workbook.Sheets[worksheetName]
+                worksheet.A1.w = "Delivery"
+                worksheet.B1.w = "Item"
+                worksheet.C1.w = "Material"
+                worksheet.D1.w = "Quantity"
+                worksheet.E1.w = "Unit"
+                if (worksheet.A1 && worksheet.B1 && worksheet.C1 && worksheet.D1 && worksheet.E1) {
+                    const data = XLSX.utils.sheet_to_json(worksheet)
+                    setFileData(data)
+                    setLoadingAlertOpen(false)
+                } else {
+                    setLoadingAlertOpen(false)
+                    clearFile()
+                    setFileTypeError(MESSAGE_ERROR_HEADER)
+                    setFileTypeErrorAlertOpen(true)
+                    return
+                }
+            } catch (error) {
+                console.log(error)
+                setLoadingAlertOpen(false)
                 clearFile()
-                setFileTypeError(MESSAGE_ERROR_FILE_TYPE)
+                setFileTypeError(MESSAGE_ERROR_HEADER)
                 setFileTypeErrorAlertOpen(true)
-                return
             }
-            const data = XLSX.utils.sheet_to_json(worksheet)
-            setFileData(data)
-            setLoadingAlertOpen(false)
         } else {
             setLoadingAlertOpen(false)
             clearFile()
