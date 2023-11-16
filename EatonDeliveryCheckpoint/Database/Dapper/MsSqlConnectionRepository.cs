@@ -74,22 +74,53 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         {
             try
             {
-                var sql = @"SELECT 
-                            i.delivery, 
-                            i.material, 
-                            i.product_count, 
-                            i.pallet_count, 
-                            i.realtime_product_count, 
-                            i.realtime_pallet_count, 
-                            i.alert 
-                            FROM [scannel].[dbo].[eaton_delivery_number] AS n 
-                            INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
-                            ON n.id=i.f_delivery_number_id 
-                            WHERE n.no=@no ";
-                return _connection.Query<DeliveryNumberDataDto>(sql, new
+                var dataSql = @"SELECT 
+                                i.delivery, 
+                                i.material, 
+                                i.product_count, 
+                                i.pallet_count, 
+                                i.realtime_product_count, 
+                                i.realtime_pallet_count, 
+                                i.alert 
+                                FROM [scannel].[dbo].[eaton_delivery_number] AS n 
+                                INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
+                                ON n.id=i.f_delivery_number_id 
+                                WHERE n.no=@no ";
+                List<DeliveryNumberDataDto> dataDtos = _connection.Query<DeliveryNumberDataDto>(dataSql, new
                 {
                     no = no,
                 }).ToList();
+                List<string> materials = dataDtos.Select(dto => dto.material).ToList();
+                var recordSql = @"SELECT 
+                                    w.epc, 
+                                    w.reader_id, 
+                                    w.timestamp, 
+                                    d.wo, 
+                                    d.qty, 
+                                    d.pn, 
+                                    d.line, 
+                                    d.pallet_id 
+                                    FROM [scannel].[dbo].[eaton_delivery_number] AS n
+                                    INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
+                                    ON n.id=i.f_delivery_number_id AND i.material IN @materials
+                                    INNER JOIN [scannel].[dbo].[eaton_cargo_data_record] AS r 
+                                    ON i.id=r.f_cargo_data_info_id 
+                                    INNER JOIN [scannel].[dbo].[eaton_epc_data] AS d 
+                                    ON d.id=r.f_epc_data_id 
+                                    INNER JOIN [scannel].[dbo].[eaton_epc_raw] AS w 
+                                    ON w.id=r.f_epc_raw_id 
+                                    WHERE n.no=@no 
+                                    ORDER BY w.timestamp ";
+                List<DeliveryNumberDataRecordDto> recordDtos = _connection.Query<DeliveryNumberDataRecordDto>(recordSql, new
+                {
+                    no = no,
+                    materials = materials
+                }).ToList();
+                foreach(var data in dataDtos)
+                {
+                    data.records = recordDtos.Where(d => d.pn == data.material).ToList();
+                }
+                return dataDtos;
             }
             catch (Exception exp)
             {

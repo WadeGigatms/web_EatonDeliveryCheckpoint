@@ -14,5 +14,6 @@ namespace EatonDeliveryCheckpoint.Dtos
         public int realtime_product_count { get; set; }
         public int realtime_pallet_count { get; set; }
         public int alert { get; set; }
+        public List<DeliveryNumberDataRecordDto> records { get; set; }
     }
 }
