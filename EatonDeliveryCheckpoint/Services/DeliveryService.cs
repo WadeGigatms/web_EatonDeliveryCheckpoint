@@ -649,7 +649,7 @@ namespace EatonDeliveryCheckpoint.Services
                 delivery = context.Select(c => c.delivery).FirstOrDefault(),
                 material = context.Key,
                 product_count = context.Sum(c => c.quantity),
-                pallet_count = (int)Math.Ceiling(decimal.ToDouble(context.Sum(c => c.quantity))/decimal.ToDouble(context.Select(c => c.unit).FirstOrDefault())),
+                pallet_count = context.Sum(c => c.unit),
             });
             foreach (var groupByMaterialContext in groupByMaterialContexts)
             {
