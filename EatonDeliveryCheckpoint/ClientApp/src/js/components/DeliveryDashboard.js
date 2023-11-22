@@ -50,7 +50,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
 
     useEffect(() => {
         if (deliveryNumberDtos) {
-            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
+            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0) // find deliverying in database
             if (deliveryingNumberDto === null || deliveryingNumberDto === undefined) {
                 return
             } else {
