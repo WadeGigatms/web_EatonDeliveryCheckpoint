@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using EatonDeliveryCheckpoint.Dtos;
+using EatonDeliveryCheckpoint.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,11 +24,12 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 var sql = @"SELECT 
                             COUNT(id) 
                             FROM [scannel].[dbo].[eaton_delivery_number] 
-                            WHERE state BETWEEN @state_ready AND @state_delivery ";
+                            WHERE state = @state_new OR state = @state_delivery OR state = @state_alert ";
                 return _connection.Query<int>(sql, new
                 {
-                    state_ready = -1,
-                    state_delivery = 0,
+                    state_new = DeliveryStateEnum.New.ToDescription(),
+                    state_delivery = DeliveryStateEnum.Delivery.ToDescription(),
+                    state_alert = DeliveryStateEnum.Alert.ToDescription(),
                 }).FirstOrDefault();
             }
             catch (Exception exp)
@@ -56,12 +58,13 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             FROM [scannel].[dbo].[eaton_delivery_file] AS f 
                             INNER JOIN [scannel].[dbo].[eaton_delivery_number] AS n 
                             ON f.id=n.f_delivery_file_id 
-                            WHERE n.state BETWEEN @state_ready AND @state_delivery  
+                            WHERE n.state = @state_new OR n.state = @state_delivery OR n.state = @state_alert 
                             ORDER BY f.upload_timestamp DESC ";
                 return _connection.Query<DeliveryNumberDto>(sql, new
                 {
-                    state_ready = -1,
-                    state_delivery = 0,
+                    state_new = DeliveryStateEnum.New.ToDescription(),
+                    state_delivery = DeliveryStateEnum.Delivery.ToDescription(),
+                    state_alert = DeliveryStateEnum.Alert.ToDescription(),
                 }).ToList();
             }
             catch (Exception exp)
@@ -222,7 +225,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(int state)
+        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(DeliveryStateEnum state)
         {
             try
             {
@@ -230,7 +233,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             WHERE state=@state ";
                 return _connection.Query<DeliveryNumberDto>(sql, new
                 {
-                    state = state,
+                    state = state.ToDescription(),
                 }).ToList();
             }
             catch
@@ -720,12 +723,31 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
+        public bool UpdateDeliveryNumberContextWhenDone(DeliveryNumberDto dto)
+        {
+            try
+            {
+                var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_number] 
+                            SET state=@state 
+                            WHERE no=@no ";
+                return _connection.Execute(sql, new
+                {
+                    state = dto.state,
+                    no = dto.no,
+                }) > 0;
+            }
+            catch (Exception exp)
+            {
+                return false;
+            }
+        }
+
         public bool UpdateDeliveryNumberContextWhenDataInserted(DeliveryNumberContext context)
         {
             try
             {
                 var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_number] 
-                            SET valid_pallet_quantity=@valid_pallet_quantity, invalid_pallet_quantity=@invalid_pallet_quantity, miss_pallet_quantity=@miss_pallet_quantity 
+                            SET valid_pallet_quantity=@valid_pallet_quantity, invalid_pallet_quantity=@invalid_pallet_quantity, miss_pallet_quantity=@miss_pallet_quantity, state=@state  
                             WHERE id=@id ";
                 return _connection.Execute(sql, new
                 {
@@ -733,6 +755,26 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     valid_pallet_quantity = context.valid_pallet_quantity,
                     invalid_pallet_quantity = context.invalid_pallet_quantity,
                     miss_pallet_quantity = context.miss_pallet_quantity,
+                    state = context.state,
+                }) > 0;
+            }
+            catch (Exception exp)
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateDeliveryNumberContextWhenDismissAlert(DeliveryNumberContext context)
+        {
+            try
+            {
+                var sql = @"UPDATE [scannel].[dbo].[eaton_delivery_number] 
+                            SET state=@state  
+                            WHERE id=@id ";
+                return _connection.Execute(sql, new
+                {
+                    id = context.id,
+                    state = context.state,
                 }) > 0;
             }
             catch (Exception exp)
@@ -772,7 +814,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Execute(sql, new
                 {
                     no = no,
-                    state_disable = -2,
+                    state_disable = DeliveryStateEnum.Disable.ToDescription(),
                 }) > 0;
             }
             catch (Exception exp)

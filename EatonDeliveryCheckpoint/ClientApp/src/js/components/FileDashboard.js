@@ -44,7 +44,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
     const [deleteDescriptionResult, setDeleteResultDescription] = useState(null)
     const [deleteResultSeverity, setDeleteResultSeverity] = useState("success")
     const [deleteResultAlertOpen, setDeleteResultAlertOpen] = useState(false)
-    const [deliveryStep, setDeliveryStep] = useState(0)
+    const [deliveryStep, setDeliveryStep] = useState("new")
     const [loadingAlertOpen, setLoadingAlertOpen] = useState(false)
     const [confirmAlertOpen, setConfirmAlertOpen] = useState(false)
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
@@ -77,8 +77,8 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
             if (deliveryNumberDtos && deliveryNumberDtos.length > 0) {
                 setPrimaryButtonText(selectedDeliveryNumberDto ? BTN_DELETE_FILE : BTN_EDIT_FILE)
                 setPrimaryButtonColor(selectedDeliveryNumberDto ? "error" : "warning")
-                setDisablePrimaryButton(deliveryStep === 1 && !selectedDeliveryNumberDto ? true : false)
-                setDisableSecondaryButton(selectedDeliveryNumberDto || deliveryStep === 1 ? false : true)
+                setDisablePrimaryButton(deliveryStep === "select" && !selectedDeliveryNumberDto ? true : false)
+                setDisableSecondaryButton(selectedDeliveryNumberDto || deliveryStep === "select" ? false : true)
                 return
             } else {
                 setPrimaryButtonText(BTN_EDIT_FILE)
@@ -159,7 +159,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
 
     const handleConfirmDeleteButtonClick = (e) => {
         requestDeleteApi()
-        setDeliveryStep(0)
+        setDeliveryStep("new")
     }
 
     const handleConfirmButtonClick = () => {
@@ -179,7 +179,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
                 return
             }
             if (deliveryNumberDtos) {
-                setDeliveryStep(1)
+                setDeliveryStep("select")
                 return
             }
         }
@@ -197,7 +197,7 @@ const FileDashboard = ({ deliveryNumberDtos }) => {
         clearUploadResult()
         clearDeleteResult()
         setSelectedDeliveryNumberDto(null)
-        setDeliveryStep(0)
+        setDeliveryStep("new")
     }
 
     const clearFile = () => {

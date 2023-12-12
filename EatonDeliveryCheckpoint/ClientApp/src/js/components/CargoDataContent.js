@@ -25,7 +25,7 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
     const { blinker, invalidBlinker } = useStyles()
 
     useEffect(() => {
-        if (deliveryStep === 2 && previousDatas !== undefined && previousDatas !== null) {
+        if (deliveryStep === "delivery" && previousDatas !== undefined && previousDatas !== null && datas !== null) {
             if (previousDatas.length !== datas.length) {
                 setHighlightIndex(datas.length - 1)
             } else {
@@ -60,7 +60,7 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                 // Set classname
                                 var backgroundColor = ""
                                 var classname = ""
-                                if (deliveryStep === 2) {
+                                if (deliveryStep === "delivery") {
                                     if (row.product_count === row.realtime_product_count) {
                                         backgroundColor = "lime"
                                     } else if (row.alert === 1 || row.product_count < row.realtime_product_count) {
@@ -74,7 +74,7 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                     } else {
                                         classname = ""
                                     }
-                                } else if (deliveryStep === 3) {
+                                } else if (deliveryStep === "finish") {
                                     if (row.product_count === row.realtime_product_count) {
                                         backgroundColor = "lime"
                                     } else if (row.alert === 1 || row.product_count > row.realtime_product_count) {
@@ -83,30 +83,30 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                 }
 
                                 // Get last reader_id, pallet_id from data
-                                var readerId = deliveryStep == 2 && row.records.length > 0 ? row.records[row.records.length - 1].reader_id : ""
+                                var readerId = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].reader_id : ""
                                 if (readerId == "TerminalLeft") {
                                     readerId = "L"
                                 } else if (readerId == "TerminalRight") {
                                     readerId = "R"
                                 }
-                                var pallet_id = deliveryStep == 2 && row.records.length > 0 ? row.records[row.records.length - 1].pallet_id : ""
+                                var pallet_id = deliveryStep == "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].pallet_id : ""
 
                                 // Visible
-                                if (deliveryStep === 2 && row.alert === 0 && row.product_count === -1) {
+                                if (deliveryStep === "delivery" && row.alert === 0 && row.product_count === -1) {
                                     return <TableRow key={index}></TableRow>
                                 } else {
                                     return <TableRow sx={{ backgroundColor: backgroundColor }} className={classname} key={index} >
                                         <TableCell>
-                                            {row.material} {deliveryStep == 2 && row.records.length > 0 ?
+                                            {row.material} {deliveryStep == "delivery" && row.records.length > 0 ?
                                                 <>
                                                     <Chip label={readerId} size="small" />
                                                     <Chip label={pallet_id} size="small" />
                                                 </> : ""}
                                         </TableCell>
                                         <TableCell align="right">{row.product_count}</TableCell>
-                                        <TableCell align="right">{deliveryStep > 1 ? row.realtime_product_count : "-"}</TableCell>
+                                        <TableCell align="right">{deliveryStep === "delivery" || deliveryStep === "alert" || deliveryStep === "finish" ? row.realtime_product_count : "-"}</TableCell>
                                         <TableCell align="right">{row.pallet_count}</TableCell>
-                                        <TableCell align="right">{deliveryStep > 1 ? row.realtime_pallet_count : "-"}</TableCell>
+                                        <TableCell align="right">{deliveryStep === "delivery" || deliveryStep === "alert" || deliveryStep === "finish" ? row.realtime_pallet_count : "-"}</TableCell>
                                     </TableRow>
                                 }
                             }) : <></>

@@ -34,8 +34,7 @@ import {
     axiosDeliveryReviewGetApi
 } from '../axios/Axios';
 
-const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi }) => {
-    const [deliveryStep, setDeliveryStep] = useState(0) // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
+const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, requestGetApi }) => {
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [startAlertOpen, setStartAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
@@ -49,37 +48,64 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     const [invalidDatas, setInvalidDatas] = useState(null)
 
     useEffect(() => {
-        if (deliveryNumberDtos) {
-            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0) // find deliverying in database
-            if (deliveryingNumberDto === null || deliveryingNumberDto === undefined) {
-                return
-            } else {
-                if (deliveryStep === 0) {
+
+        // check data from database
+        if (deliveryNumberDtos !== null && deliveryNumberDtos !== undefined) {
+
+            // Find deliverying in database
+            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === "delivery" || dto.state === "alert")
+
+            if (deliveryingNumberDto !== null && deliveryingNumberDto !== undefined) {
+                // There is a deliveryingNumberDto in database
+
+                if (deliveryStep === "delivery" || deliveryStep === "alert") {
+                    setSelectedDeliveryNumberDto(deliveryingNumberDto)
+                } else if (deliveryStep === "new") {
                     setPauseMessage(deliveryingNumberDto.no + "出貨作業尚未完成! " + MESSAGE_PAUSE)
                     setPauseAlertOpen(true)
-                } else if (deliveryStep === 2) {
-                    setSelectedDeliveryNumberDto(deliveryingNumberDto)
+                }
+            } else {
+                // There is no deliveryinigNumberDto in database
+
+                if (deliveryStep === "delivery" || deliveryStep === "alert") {
+
+                    if (selectedDeliveryNumberDto !== null) {
+                        // search deliveryNumberDtos by no
+                        const matchDeliveryNumberDto = deliveryNumberDtos.find((dto) => dto.state === "new" && selectedDeliveryNumberDto.no)
+
+                        if (matchDeliveryNumberDto != null) {
+                            requestGetApi()
+                        } else {
+                            setDeliveryStep("new")
+                            setSelectedDeliveryNumberDto(null)
+                        }
+                    }
                 }
             }
         }
-    }, [deliveryNumberDtos, deliveryStep])
+    }, [deliveryStep, deliveryNumberDtos, selectedDeliveryNumberDto])
 
     useEffect(() => {
         if (selectedDeliveryNumberDto) {
-            // Examine alert
-            const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.alert === 1 && data.delivery === "-")
-            const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
-            if (invalidMaterialDataDto && deliveryStep === 2) {
-                setInvalidMaterialAlertOpen(true)
-            } else if (invalidQtyDataDto && deliveryStep === 2) {
-                setInvalidQtyAlertOpen(true)
-            }
-
-            // Set valid datas and invalid datas
-            if (deliveryStep === 1 || deliveryStep === 2) {
+            if (selectedDeliveryNumberDto.state === "new" && deliveryStep === "select") {
+                // Set valid datas and invalid datas in CargoDataContent
                 setValidDatas(selectedDeliveryNumberDto.datas)
                 setInvalidDatas(null)
-            } else if (deliveryStep === 3) {
+
+            } else if (selectedDeliveryNumberDto.state === "delivery" && deliveryStep === "delivery") {
+                // Examine alert
+                const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.alert === 1 && data.delivery === "-")
+                const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
+                if (invalidMaterialDataDto && deliveryStep === "delivery") {
+                    setInvalidMaterialAlertOpen(true)
+                } else if (invalidQtyDataDto && deliveryStep === "delivery") {
+                    setInvalidQtyAlertOpen(true)
+                }
+
+                // Set valid datas and invalid datas in CargoDataContent
+                setValidDatas(selectedDeliveryNumberDto.datas)
+                setInvalidDatas(null)
+            } else if (selectedDeliveryNumberDto.state === "finish" && deliveryStep === "finish") {
                 const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count > -1 && data.delivery !== "-" && data.alert === 0)
                 const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
                 setValidDatas(validDatas)
@@ -91,26 +117,22 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
         }
     }, [selectedDeliveryNumberDto, deliveryStep])
 
-    const handlePrimaryButtonClick = (e) => {
-        if (deliveryStep === 1 && selectedDeliveryNumberDto === null) {
-            setDeliveryStep(0)
-            return
-        }
 
+    const handlePrimaryButtonClick = (e) => {
         switch (deliveryStep) {
-            case 0: {
-                // Stage 0 to 1
-                setDeliveryStep(1)
+            case "new": {
+                // new to select
+                setDeliveryStep("select")
                 break;
             }
-            case 1: {
-                // Stage 1 to 2
+            case "select": {
+                // select to delivery
                 if (selectedDeliveryNumberDto) {
                     setStartAlertOpen(true)
                 }
                 break;
             }
-            case 2: {
+            case "delivery": {
                 // Examine finish or alert
                 if (didFinishDelivery(selectedDeliveryNumberDto)) {
                     setFinishAlertOpen(true)
@@ -119,10 +141,9 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                 }
                 break;
             }
-            case 3: {
-                // Move to step 0
-                setDeliveryStep(0)
-                setDeliveryState(0)
+            case "finish": {
+                // Move back to "new"
+                setDeliveryStep("new")
                 setSelectedDeliveryNumberDto(null)
                 break;
             }
@@ -133,25 +154,25 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
     }
 
     const handleSecondaryButtonClick = (e) => {
-        setDeliveryStep(0)
+        setDeliveryStep("new")
         setSelectedDeliveryNumberDto(null)
     }
 
-    const renderButton = (deliveryStage) => {
-        switch (deliveryStage) {
-            case -1: {
+    const renderButton = (step) => {
+        switch (step) {
+            case "alert": {
                 return BTN_DELIVERY_CONTINUE;
             }
-            case 0: {
+            case "new": {
                 return BTN_DELIVERY_READY;
             }
-            case 1: {
+            case "select": {
                 return BTN_DELIVERY_START;
             }
-            case 2: {
+            case "delivery": {
                 return BTN_DELIVERY_FINISH;
             }
-            case 3: {
+            case "finish": {
                 return BTN_FINISH;
             }
             default: {
@@ -162,8 +183,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
 
     const handleStartButtonClick = () => {
         setStartAlertOpen(false)
-        setDeliveryStep(2)
-        setDeliveryState(1)
+        setDeliveryStep("delivery")
         requestStartPostApi()
     }
 
@@ -175,13 +195,13 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
 
     const handleQuitButtonClick = () => {
         setQuitAlertOpen(false)
-        setDeliveryStep(3)
+        setDeliveryStep("finish")
         requestFinishPostApi()
     }
 
     const handleFinishButtonClick = () => {
         setFinishAlertOpen(false)
-        setDeliveryStep(3)
+        setDeliveryStep("finish")
         requestFinishPostApi()
     }
 
@@ -193,18 +213,13 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
 
     const handleContinueButtonClick = () => {
         setPauseAlertOpen(false)
-        setDeliveryStep(2)
-        setDeliveryState(1)
-        if (deliveryNumberDtos) {
-            const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === 0)
-            setSelectedDeliveryNumberDto(deliveryingNumberDto)
-        }
+        setDeliveryStep("delivery")
     }
 
     const handleQuitFromPauseButtonClick = () => {
         setPauseAlertOpen(false)
         setPauseMessage("")
-        setDeliveryStep(3)
+        setDeliveryStep("finish")
         requestFinishPostApi()
     }
 
@@ -226,27 +241,27 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
         return false
     }
 
-    function isDisabled(deliveryStage) {
-        if (deliveryStage === 0 && deliveryNumberDtos) {
+    function isDisabled(step) {
+        if (step === "new" && deliveryNumberDtos) {
             if (deliveryNumberDtos.length > 0) {
                 return false
             }
-        } else if (deliveryStage === 1 && selectedDeliveryNumberDto) {
+        } else if (step === "select" && selectedDeliveryNumberDto) {
             return false
-        } else if (deliveryStage === 2) {
+        } else if (step === "delivery") {
             return false
-        } else if (deliveryStage === 3) {
+        } else if (step === "finish") {
             return false
         }
         return true
     }
 
     function handlePrimaryButtonColor(deliveryStep) {
-        if (deliveryStep === -1) {
+        if (deliveryStep === "alert") {
             return "warning"
-        } else if (deliveryStep === 2 && didFinishDelivery(selectedDeliveryNumberDto) === true) {
+        } else if (deliveryStep === "delivery" && didFinishDelivery(selectedDeliveryNumberDto) === true) {
             return "success"
-        } else if (deliveryStep === 3) {
+        } else if (deliveryStep === "finish") {
             return "success"
         }
         return "primary"
@@ -309,7 +324,9 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
                     setSelectedDeliveryNumberDto(null)
                 }
             }
+            setLoadingAlertOpen(false)
         } catch (error) {
+            setLoadingAlertOpen(false)
             console.log("requestReviewGetApi error")
             console.log(error)
         }
@@ -327,12 +344,12 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
         <div className="col-sm-6 h-100">
             <Stack spacing={2} direction="column" className="h-100">
                 <CargoDataContent
-                    className={deliveryStep === 3 ? "h-75" : "h-100"}
+                    className={deliveryStep === "finish" ? "h-75" : "h-100"}
                     title={TABLE_REALTIME_MATERIAL}
                     deliveryStep={deliveryStep}
                     datas={validDatas} />
                 {
-                    deliveryStep === 3 ? (
+                    deliveryStep === "finish" ? (
                         <CargoDataContent
                             className={"h-25"}
                             title={TABLE_REALTIME_MATERIAL}
@@ -346,7 +363,7 @@ const DeliveryDashboard = ({ setDeliveryState, deliveryNumberDtos, requestGetApi
             <Stack spacing={2} direction="column" className="h-100">
                 <CargoDataInfoContent deliveryStep={deliveryStep} selectedDeliveryCargoDto={selectedDeliveryNumberDto} className="h-100" />
                 {
-                    deliveryStep === 1 && selectedDeliveryNumberDto === null ?
+                    deliveryStep === "select" && selectedDeliveryNumberDto === null ?
                         <Button
                             variant="contained"
                             color="secondary"

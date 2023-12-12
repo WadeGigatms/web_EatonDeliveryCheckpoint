@@ -28,7 +28,7 @@ const CargoContent = ({ deliveryStep, deliveryNumberDtos, selectedDeliveryNumber
     }, [selectedDeliveryNumberDto])
 
     const handleTableRowClick = (e, index, no) => {
-        if (deliveryStep === 1 || deliveryStep === 4) {
+        if (deliveryStep === "select" || deliveryStep === "edit") {
             if (selectedNo !== no) {
                 setSelectedNo(no)
                 setSelectedDeliveryNumberDto(deliveryNumberDtos[index])
@@ -67,7 +67,7 @@ const CargoContent = ({ deliveryStep, deliveryNumberDtos, selectedDeliveryNumber
                                     selected={isSelected(row.no)}
                                     sx={{ cursor: 'pointer' }} >
                                     {
-                                        deliveryStep > 0 ? (
+                                        deliveryStep !== "new" ? (
                                             <TableCell padding="checkbox">
                                                 <Checkbox checked={isSelected(row.no)} />
                                             </TableCell>) : <TableCell></TableCell>

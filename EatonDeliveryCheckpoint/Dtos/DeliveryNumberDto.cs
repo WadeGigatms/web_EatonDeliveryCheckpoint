@@ -19,7 +19,7 @@ namespace EatonDeliveryCheckpoint.Dtos
         public int miss_pallet_quantity { get; set; }
         public int valid_pallet_quantity { get; set; }
         public int invalid_pallet_quantity { get; set; }
-        public int state { get; set; } // -1: new, 0: deliverying, 1: finish
+        public string state { get; set; }
         public List<DeliveryNumberDataDto> datas { get; set; }
 
     }

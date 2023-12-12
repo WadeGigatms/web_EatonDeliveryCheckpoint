@@ -1,4 +1,5 @@
 ﻿using EatonDeliveryCheckpoint.Dtos;
+using EatonDeliveryCheckpoint.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
             => MsSqlConnectionRepository.QueryCargoDataInfoContexts(ids);
 
-        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(int state)
+        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(DeliveryStateEnum state)
             => MsSqlConnectionRepository.QueryDeliveryNumberDtosWithState(state);
 
         public CargoDataInfoContext QueryCargoDataInfoContextWithMaterial(int cargo_id, string material)
@@ -101,8 +102,14 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public bool UpdateDeliveryNumberContextWhenFinish(DeliveryNumberDto dto)
             => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenFinish(dto);
 
+        public bool UpdateDeliveryNumberContextWhenDone(DeliveryNumberDto dto)
+            => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenDone(dto);
+
         public bool UpdateDeliveryNumberContextWhenDataInserted(DeliveryNumberContext context)
             => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenDataInserted(context);
+
+        public bool UpdateDeliveryNumberContextWhenDismissAlert(DeliveryNumberContext context)
+            => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenDismissAlert(context);
 
         public bool UpdateCargoDataInfoContext(CargoDataInfoContext context)
             => MsSqlConnectionRepository.UpdateCargoDataInfoContext(context);

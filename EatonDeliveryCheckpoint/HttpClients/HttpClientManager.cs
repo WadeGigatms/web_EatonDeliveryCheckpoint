@@ -43,7 +43,7 @@ namespace EatonDeliveryCheckpoint.HttpClients
             }
         }
 
-        public bool PostToNoTriggeTerminalReader()
+        public bool PostToDismissTriggerTerminalReader()
         {
             try
             {

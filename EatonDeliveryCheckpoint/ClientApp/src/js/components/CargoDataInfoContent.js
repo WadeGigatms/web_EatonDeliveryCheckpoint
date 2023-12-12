@@ -41,11 +41,13 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
             setCurrentTime(moment());
         }, 1000);
 
-        if (deliveryStep > 1 && selectedDeliveryCargoDto) {
+        const isDelivery = deliveryStep === "delivery" || deliveryStep === "alert" || deliveryStep === "finish" ? true : false
+
+        if (isDelivery === true && selectedDeliveryCargoDto) {
             const startDate = new Date(selectedDeliveryCargoDto.start_time)
-            const endDate = selectedDeliveryCargoDto.state === 1 ? new Date(selectedDeliveryCargoDto.end_time) : currentTime
+            const endDate = selectedDeliveryCargoDto.state === "finish" ? new Date(selectedDeliveryCargoDto.end_time) : currentTime
             const startMoment = moment(startDate)
-            const endMoment = selectedDeliveryCargoDto.state === 1 ? moment(endDate) : currentTime
+            const endMoment = selectedDeliveryCargoDto.state === "finish" ? moment(endDate) : currentTime
             const date = startMoment.format("yyyy/MM/DD")
             const startTime = startMoment.format("HH:mm:ss")
             const endTime = endMoment.format("HH:mm:ss")

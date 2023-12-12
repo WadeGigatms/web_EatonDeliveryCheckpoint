@@ -18,6 +18,6 @@ namespace EatonDeliveryCheckpoint.Database
         public int miss_pallet_quantity { get; set; }
         public int valid_pallet_quantity { get; set; }
         public int invalid_pallet_quantity { get; set; }
-        public int state { get; set; } // -1: ready to delivery, 0: deliverying, 1: did delivery
+        public string state { get; set; } // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
     }
 }

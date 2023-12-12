@@ -47,6 +47,13 @@ namespace EatonDeliveryCheckpoint.Database
             _cache.Set(LocalMemoryCacheKey.DeliveryNumberDtos, dtos, TimeSpan.FromHours(1));
         }
 
+        public void RemoveDeliveryNumberDtos()
+        {
+            _cache.Remove(LocalMemoryCacheKey.DeliveryNumberDtos);
+
+            SaveCacheDidChange(true);
+        }
+
         // DeliveryingCargoDto: Cache the deliverying context sent to client
 
         public DeliveryNumberDto ReadDeliveryingNumberDto()
@@ -63,7 +70,7 @@ namespace EatonDeliveryCheckpoint.Database
             _cache.Set(LocalMemoryCacheKey.DeliveryingNumberDto, dto, TimeSpan.FromHours(1));
         }
 
-        public void DeleteDeliveryingNumberDto()
+        public void RemoveDeliveryingNumberDto()
         {
             _cache.Remove(LocalMemoryCacheKey.DeliveryingNumberDto);
 

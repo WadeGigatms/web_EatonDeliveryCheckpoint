@@ -12,50 +12,56 @@ const Content = () => {
     const [homeBtnClass, setHomeBtnClass] = useState(activeBtnClass)
     const [uploadBtnClass, setUploadBtnClass] = useState(inactiveBtnClass)
     const [searchBtnClass, setSearchBtnClass] = useState(inactiveBtnClass)
-    const [contentPage, setContentPage] = useState(0) // 0: home, 1: upload, 2: search
-    const [deliveryState, setDeliveryState] = useState(0) // 0: none, 1: deliverying
+    const [contentPage, setContentPage] = useState("home") // 0: home, 1: upload, 2: search
+    const [buttonDisabled, setButtonDisabled] = useState(false)
+    const [deliveryStep, setDeliveryStep] = useState("new")
+    // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
     const [deliveryNumberDtos, setDeliveryNumberDtos] = useState(null)
 
     useEffect(() => {
         const interval = setInterval(() => {
             requestGetApi()
-        }, 5000)
+        }, 4000)
         return () => clearInterval(interval)
-    }, [deliveryState])
+    }, [])
+
+    useEffect(() => {
+        setButtonDisabled(deliveryStep === "delivery" || deliveryStep === "alert" ? true : false)
+    }, [deliveryStep])
 
     const handleHomeClick = (e) => {
         setHomeBtnClass(activeBtnClass)
         setUploadBtnClass(inactiveBtnClass)
         setSearchBtnClass(inactiveBtnClass)
-        setContentPage(0)
+        setContentPage("home")
     }
 
     const handleUploadClick = (e) => {
         setHomeBtnClass(inactiveBtnClass)
         setUploadBtnClass(activeBtnClass)
         setSearchBtnClass(inactiveBtnClass)
-        setContentPage(1)
+        setContentPage("upload")
     }
 
     const handleSearchClick = (e) => {
         setHomeBtnClass(inactiveBtnClass)
         setUploadBtnClass(inactiveBtnClass)
         setSearchBtnClass(activeBtnClass)
-        setContentPage(2)
+        setContentPage("search")
     }
 
     const renderContent = (contentState) => {
         switch (contentState) {
-            case 0:
+            case "home":
                 return <DeliveryDashboard
-                    setDeliveryState={setDeliveryState}
+                    deliveryStep={deliveryStep}
+                    setDeliveryStep={setDeliveryStep}
                     deliveryNumberDtos={deliveryNumberDtos}
                     requestGetApi={requestGetApi}/>
-            case 1:
+            case "upload":
                 return <FileDashboard deliveryNumberDtos={deliveryNumberDtos} />
-            case 2:
-                return <SearchDashboard
-                    deliveryNumberDtos={deliveryNumberDtos}/>
+            case "search":
+                return <SearchDashboard deliveryNumberDtos={deliveryNumberDtos} />
             default:
                 return <></>
         }
@@ -92,13 +98,13 @@ const Content = () => {
                                 </button>
                             </li>
                             <li className="nav-item nav-link h-100">
-                                <button type="button" className={uploadBtnClass} onClick={handleUploadClick} disabled={deliveryState === 1} >
+                                <button type="button" className={uploadBtnClass} onClick={handleUploadClick} disabled={buttonDisabled} >
                                     <i className="fas fa-upload"></i>
                                     <label className="navbar-item-text">{NAV_UPLOAD}</label>
                                 </button>
                             </li>
                             <li className="nav-item nav-link h-100">
-                                <button type="button" className={searchBtnClass} onClick={handleSearchClick} disabled={deliveryState === 1}  >
+                                <button type="button" className={searchBtnClass} onClick={handleSearchClick} disabled={buttonDisabled} >
                                     <i className="fas fa-search"></i>
                                     <label className="navbar-item-text">{NAV_SEARCH}</label>
                                 </button>
