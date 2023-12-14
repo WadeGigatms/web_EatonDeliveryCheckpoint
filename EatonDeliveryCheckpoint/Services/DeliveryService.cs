@@ -425,6 +425,7 @@ namespace EatonDeliveryCheckpoint.Services
                     int qty = _connection.QueryQtyByCargoDataRecordContextWithInfoIds(cargoDataInfoContext.f_delivery_number_id, cargoDataInfoContext.id);
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext, qty);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
+                    UpdateDeliveryNumberContextWhenDismissAlert(ref deliveryNumberContext);
                     result = _connection.UpdateDeliveryNumberContextWhenDismissAlert(deliveryNumberContext);
                 }
                 else if (alertDeliveryNumberDataDto.product_count == -1)
@@ -443,6 +444,7 @@ namespace EatonDeliveryCheckpoint.Services
                     CargoDataInfoContext cargoDataInfoContext = _connection.QueryCargoDataInfoContextWithMaterial(deliveryNumberContext.id, alertDeliveryNumberDataDto.material);
                     UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref cargoDataInfoContext);
                     result = _connection.UpdateCargoDataInfoContext(cargoDataInfoContext);
+                    UpdateDeliveryNumberContextWhenDismissAlert(ref deliveryNumberContext);
                     result = _connection.UpdateDeliveryNumberContextWhenDismissAlert(deliveryNumberContext);
                 }
             }
@@ -728,6 +730,11 @@ namespace EatonDeliveryCheckpoint.Services
                 f_epc_data_id = dto.epc_data_id,
                 valid = valid ? 1 : 0,
             };
+        }
+
+        private void UpdateDeliveryNumberContextWhenDismissAlert(ref DeliveryNumberContext context)
+        {
+            context.state = DeliveryStateEnum.Delivery.ToDescription();
         }
 
         private void UpdateDeliveryNumberContextWithInvalidPallet(ref DeliveryNumberContext context)

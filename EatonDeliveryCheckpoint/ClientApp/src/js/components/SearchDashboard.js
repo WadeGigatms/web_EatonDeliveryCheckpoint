@@ -86,7 +86,7 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
     return <div className="row h-100 p-3">
         <div className="col-sm-3 h-100">
             <CargoContent
-                deliveryStep={0}
+                deliveryStep={"new"}
                 deliveryNumberDtos={deliveryNumberDtos}
                 selectedDeliveryNumberDto={null}
                 setSelectedDeliveryNumberDto={null} />
@@ -96,18 +96,21 @@ const SearchDashboard = ({ deliveryNumberDtos }) => {
                 <CargoDataContent
                     className={"h-75"}
                     title={TABLE_REALTIME_MATERIAL}
-                    deliveryStep={3}
+                    deliveryStep={"finish"}
                     datas={validDatas} />
                 <CargoDataContent
                     className={"h-25"}
                     title={TABLE_REALTIME_MATERIAL}
-                    deliveryStep={3}
+                    deliveryStep={"finish"}
                     datas={invalidDatas} />
             </Stack>
         </div>
         <div className="col-sm-3 h-100">
             <Stack spacing={2} direction="column" className="h-100">
-                <CargoDataInfoContent deliveryStep={3} selectedDeliveryCargoDto={selectedDeliveryNumberDto} className="h-100" />
+                <CargoDataInfoContent
+                    className="h-100"
+                    deliveryStep={"finish"}
+                    selectedDeliveryCargoDto={selectedDeliveryNumberDto} />
                 <Button variant="contained" color="primary" size="large" onClick={() => setSearchFormAlertOpen(true)}>{BTN_SEARCH}</Button>
             </Stack>
         </div>

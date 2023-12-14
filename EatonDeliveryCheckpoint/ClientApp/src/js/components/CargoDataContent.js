@@ -39,6 +39,26 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
         }
     }, [deliveryStep, datas, previousDatas])
 
+    const displayReaderAndPallet = (step, row) => {
+        if (step === "delivery" && row.records) {
+            if (row.records.length > 0) {
+                var readerId = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].reader_id : ""
+                if (readerId === "TerminalLeft") {
+                    readerId = "L"
+                } else if (readerId === "TerminalRight") {
+                    readerId = "R"
+                }
+                var pallet_id = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].pallet_id : ""
+
+                return <>
+                    <Chip label={readerId} size="small" />
+                    <Chip label={pallet_id} size="small" />
+                </>
+            }
+        }
+        return <></>
+    }
+
     return <div className={"card card-primary " + className}>
         <div className="card-header">{title}</div>
         <div className="card-body table-responsive p-0">
@@ -83,13 +103,15 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                 }
 
                                 // Get last reader_id, pallet_id from data
-                                var readerId = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].reader_id : ""
-                                if (readerId == "TerminalLeft") {
-                                    readerId = "L"
-                                } else if (readerId == "TerminalRight") {
-                                    readerId = "R"
+                                if (row.records !== null) {
+                                    var readerId = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].reader_id : ""
+                                    if (readerId === "TerminalLeft") {
+                                        readerId = "L"
+                                    } else if (readerId === "TerminalRight") {
+                                        readerId = "R"
+                                    }
+                                    var pallet_id = deliveryStep === "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].pallet_id : ""
                                 }
-                                var pallet_id = deliveryStep == "delivery" && row.records.length > 0 ? row.records[row.records.length - 1].pallet_id : ""
 
                                 // Visible
                                 if (deliveryStep === "delivery" && row.alert === 0 && row.product_count === -1) {
@@ -97,11 +119,7 @@ const CargoDataContent = ({ className, title, deliveryStep, datas }) => {
                                 } else {
                                     return <TableRow sx={{ backgroundColor: backgroundColor }} className={classname} key={index} >
                                         <TableCell>
-                                            {row.material} {deliveryStep == "delivery" && row.records.length > 0 ?
-                                                <>
-                                                    <Chip label={readerId} size="small" />
-                                                    <Chip label={pallet_id} size="small" />
-                                                </> : ""}
+                                            {row.material} {displayReaderAndPallet(deliveryStep, row)}
                                         </TableCell>
                                         <TableCell align="right">{row.product_count}</TableCell>
                                         <TableCell align="right">{deliveryStep === "delivery" || deliveryStep === "alert" || deliveryStep === "finish" ? row.realtime_product_count : "-"}</TableCell>

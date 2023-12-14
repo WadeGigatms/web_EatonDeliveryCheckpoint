@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import { NAV_HOME, NAV_SEARCH, NAV_TITLE, NAV_UPLOAD } from '../constants';
 import DeliveryDashboard from './DeliveryDashboard';
 import FileDashboard from './FileDashboard';
@@ -21,13 +21,25 @@ const Content = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             requestGetApi()
-        }, 4000)
+        }, 5000)
         return () => clearInterval(interval)
     }, [])
 
     useEffect(() => {
         setButtonDisabled(deliveryStep === "delivery" || deliveryStep === "alert" ? true : false)
     }, [deliveryStep])
+
+    async function requestGetApi() {
+        try {
+            const response = await axiosDeliveryGetApi();
+            if (response.data.result === true) {
+                setDeliveryNumberDtos(response.data.deliveryNumberDtos);
+            }
+        } catch (error) {
+            console.log("requestGetApi error");
+            console.log(error);
+        }
+    }
 
     const handleHomeClick = (e) => {
         setHomeBtnClass(activeBtnClass)
@@ -57,25 +69,13 @@ const Content = () => {
                     deliveryStep={deliveryStep}
                     setDeliveryStep={setDeliveryStep}
                     deliveryNumberDtos={deliveryNumberDtos}
-                    requestGetApi={requestGetApi}/>
+                    setDeliveryNumberDtos={setDeliveryNumberDtos} />
             case "upload":
                 return <FileDashboard deliveryNumberDtos={deliveryNumberDtos} />
             case "search":
                 return <SearchDashboard deliveryNumberDtos={deliveryNumberDtos} />
             default:
                 return <></>
-        }
-    }
-
-    async function requestGetApi() {
-        try {
-            const response = await axiosDeliveryGetApi()
-            if (response.data.result === true) {
-                setDeliveryNumberDtos(response.data.deliveryNumberDtos)
-            }
-        } catch (error) {
-            console.log("requestGetApi error")
-            console.log(error)
         }
     }
 

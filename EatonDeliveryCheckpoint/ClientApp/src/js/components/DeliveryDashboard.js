@@ -28,13 +28,14 @@ import {
     TABLE_REALTIME_MATERIAL,
 } from '../constants';
 import {
+    axiosDeliveryGetApi,
     axiosDeliveryStartPostApi,
     axiosDeliveryFinishPostApi,
     axiosDeliveryDismissAlertPostApi,
     axiosDeliveryReviewGetApi
 } from '../axios/Axios';
 
-const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, requestGetApi }) => {
+const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, setDeliveryNumberDtos }) => {
     const [selectedDeliveryNumberDto, setSelectedDeliveryNumberDto] = useState(null)
     const [startAlertOpen, setStartAlertOpen] = useState(false)
     const [quitAlertOpen, setQuitAlertOpen] = useState(false)
@@ -46,40 +47,124 @@ const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, 
     const [pauseMessage, setPauseMessage] = useState("")
     const [validDatas, setValidDatas] = useState(null)
     const [invalidDatas, setInvalidDatas] = useState(null)
+    const requestGetApi = async () => {
+        try {
+            const response = await axiosDeliveryGetApi();
+            if (response.data.result === true) {
+                setDeliveryNumberDtos(response.data.deliveryNumberDtos);
+            }
+        } catch (error) {
+            console.log("requestGetApi error");
+            console.log(error);
+        }
+    }
+
+    const requestDismissAlertPostApi = async () => {
+        setLoadingAlertOpen(true)
+        try {
+            const json = JSON.stringify(selectedDeliveryNumberDto)
+            const response = await axiosDeliveryDismissAlertPostApi(json)
+            if (response.data.result === true) {
+                requestGetApi()
+            }
+        } catch (error) {
+            console.log("requestDismissAlertPostApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
+    }
+
+    const requestStartPostApi = async () => {
+        setLoadingAlertOpen(true)
+        try {
+            const json = JSON.stringify(selectedDeliveryNumberDto)
+            const response = await axiosDeliveryStartPostApi(json)
+            if (response.data.result === true) {
+                requestGetApi()
+            }
+        } catch (error) {
+            console.log("requestStartPostApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
+    }
+
+    const requestFinishPostApi = async () => {
+        setLoadingAlertOpen(true)
+        try {
+            const json = JSON.stringify(selectedDeliveryNumberDto)
+            const response = await axiosDeliveryFinishPostApi(json)
+            if (response.data.result === true) {
+                requestReviewGetApi()
+            }
+        } catch (error) {
+            console.log("requestFinishPostApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
+    }
+
+    const requestReviewGetApi = async () => {
+        setLoadingAlertOpen(true)
+        try {
+            const response = await axiosDeliveryReviewGetApi(selectedDeliveryNumberDto.no)
+            if (response.data.result === true) {
+                const deliveryNumberDtos = response.data.deliveryNumberDtos
+                if (deliveryNumberDtos != null) {
+                    setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
+                } else {
+                    setSelectedDeliveryNumberDto(null)
+                }
+            }
+            setLoadingAlertOpen(false)
+        } catch (error) {
+            setLoadingAlertOpen(false)
+            console.log("requestReviewGetApi error")
+            console.log(error)
+        }
+        setLoadingAlertOpen(false)
+    }
 
     useEffect(() => {
-
         // check data from database
-        if (deliveryNumberDtos !== null && deliveryNumberDtos !== undefined) {
-
+        if (deliveryNumberDtos) {
             // Find deliverying in database
             const deliveryingNumberDto = deliveryNumberDtos.find((dto) => dto.state === "delivery" || dto.state === "alert")
-
-            if (deliveryingNumberDto !== null && deliveryingNumberDto !== undefined) {
+            if (deliveryingNumberDto) {
                 // There is a deliveryingNumberDto in database
-
-                if (deliveryStep === "delivery" || deliveryStep === "alert") {
-                    setSelectedDeliveryNumberDto(deliveryingNumberDto)
-                } else if (deliveryStep === "new") {
-                    setPauseMessage(deliveryingNumberDto.no + "出貨作業尚未完成! " + MESSAGE_PAUSE)
-                    setPauseAlertOpen(true)
+                switch (deliveryStep) {
+                    case "new":
+                        setDeliveryStep("delivery")
+                    case "delivery":
+                        setSelectedDeliveryNumberDto(deliveryingNumberDto)
+                    case "finish":
+                        if (selectedDeliveryNumberDto && deliveryingNumberDto.no !== selectedDeliveryNumberDto.no) {
+                            setSelectedDeliveryNumberDto(deliveryingNumberDto)
+                            setDeliveryStep("delivery")
+                        }
+                    default:
+                        return;
                 }
             } else {
-                // There is no deliveryinigNumberDto in database
-
-                if (deliveryStep === "delivery" || deliveryStep === "alert") {
-
-                    if (selectedDeliveryNumberDto !== null) {
+                // There is no deliveryingNumberDto in database
+                switch (deliveryStep) {
+                    case "delivery":
                         // search deliveryNumberDtos by no
-                        const matchDeliveryNumberDto = deliveryNumberDtos.find((dto) => dto.state === "new" && selectedDeliveryNumberDto.no)
+                        if (selectedDeliveryNumberDto) {
+                            const matchDeliveryNumberDto = deliveryNumberDtos.find((dto) => dto.state === "new" && dto.no === selectedDeliveryNumberDto.no)
+                            if (matchDeliveryNumberDto) {
 
-                        if (matchDeliveryNumberDto != null) {
-                            requestGetApi()
-                        } else {
-                            setDeliveryStep("new")
-                            setSelectedDeliveryNumberDto(null)
+                            } else {
+                                setSelectedDeliveryNumberDto(null)
+                                setDeliveryStep("new")
+                            }
                         }
-                    }
+                    case "finish":
+                        if (selectedDeliveryNumberDto === null) {
+                            setDeliveryStep("new")
+                        }
+                    default:
+                        return;
                 }
             }
         }
@@ -87,36 +172,47 @@ const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, 
 
     useEffect(() => {
         if (selectedDeliveryNumberDto) {
-            if (selectedDeliveryNumberDto.state === "new" && deliveryStep === "select") {
-                // Set valid datas and invalid datas in CargoDataContent
-                setValidDatas(selectedDeliveryNumberDto.datas)
-                setInvalidDatas(null)
+            switch (deliveryStep) {
+                case "select":
+                    if (selectedDeliveryNumberDto.state === "new") {
+                        // Set valid datas and invalid datas in CargoDataContent
+                        setValidDatas(selectedDeliveryNumberDto.datas)
+                        setInvalidDatas(null)
+                    }
+                case "delivery":
+                    if (selectedDeliveryNumberDto.state === "delivery" || selectedDeliveryNumberDto.state === "alert") {
+                        // Set valid datas and invalid datas in CargoDataContent
+                        setValidDatas(selectedDeliveryNumberDto.datas)
+                        setInvalidDatas(null)
 
-            } else if (selectedDeliveryNumberDto.state === "delivery" && deliveryStep === "delivery") {
-                // Examine alert
-                const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.alert === 1 && data.delivery === "-")
-                const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
-                if (invalidMaterialDataDto && deliveryStep === "delivery") {
-                    setInvalidMaterialAlertOpen(true)
-                } else if (invalidQtyDataDto && deliveryStep === "delivery") {
-                    setInvalidQtyAlertOpen(true)
-                }
-
-                // Set valid datas and invalid datas in CargoDataContent
-                setValidDatas(selectedDeliveryNumberDto.datas)
-                setInvalidDatas(null)
-            } else if (selectedDeliveryNumberDto.state === "finish" && deliveryStep === "finish") {
-                const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count > -1 && data.delivery !== "-" && data.alert === 0)
-                const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
-                setValidDatas(validDatas)
-                setInvalidDatas(invalidDatas)
+                        const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.delivery === "-" && data.alert === 1)
+                        const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
+                        if (invalidMaterialDataDto) {
+                            setInvalidMaterialAlertOpen(true)
+                        } else if (invalidQtyDataDto) {
+                            setInvalidQtyAlertOpen(true)
+                        } else {
+                            setInvalidMaterialAlertOpen(false)
+                            setInvalidQtyAlertOpen(false)
+                        }
+                    }
+                case "finish":
+                    if (selectedDeliveryNumberDto.state === "finish") {
+                        // Set valid datas and invalid datas in CargoDataContent
+                        const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count > -1 && data.delivery !== "-" && data.alert === 0)
+                        const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
+                        setValidDatas(validDatas)
+                        setInvalidDatas(invalidDatas)
+                    }
+                default:
+                    return;
             }
         } else {
+            // Set valid datas and invalid datas in CargoDataContent
             setValidDatas(null)
             setInvalidDatas(null)
         }
-    }, [selectedDeliveryNumberDto, deliveryStep])
-
+    }, [deliveryStep, selectedDeliveryNumberDto])
 
     const handlePrimaryButtonClick = (e) => {
         switch (deliveryStep) {
@@ -265,72 +361,6 @@ const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, 
             return "success"
         }
         return "primary"
-    }
-
-    async function requestDismissAlertPostApi() {
-        setLoadingAlertOpen(true)
-        try {
-            const json = JSON.stringify(selectedDeliveryNumberDto)
-            const response = await axiosDeliveryDismissAlertPostApi(json)
-            if (response.data.result === true) {
-                requestGetApi()
-            }
-        } catch (error) {
-            console.log("requestDismissAlertPostApi error")
-            console.log(error)
-        }
-        setLoadingAlertOpen(false)
-    }
-
-    async function requestStartPostApi() {
-        setLoadingAlertOpen(true)
-        try {
-            const json = JSON.stringify(selectedDeliveryNumberDto)
-            const response = await axiosDeliveryStartPostApi(json)
-            if (response.data.result === true) {
-                requestGetApi()
-            }
-        } catch (error) {
-            console.log("requestStartPostApi error")
-            console.log(error)
-        }
-        setLoadingAlertOpen(false)
-    }
-
-    async function requestFinishPostApi() {
-        setLoadingAlertOpen(true)
-        try {
-            const json = JSON.stringify(selectedDeliveryNumberDto)
-            const response = await axiosDeliveryFinishPostApi(json)
-            if (response.data.result === true) {
-                requestReviewGetApi()
-            }
-        } catch (error) {
-            console.log("requestFinishPostApi error")
-            console.log(error)
-        }
-        setLoadingAlertOpen(false)
-    }
-
-    async function requestReviewGetApi() {
-        setLoadingAlertOpen(true)
-        try {
-            const response = await axiosDeliveryReviewGetApi(selectedDeliveryNumberDto.no)
-            if (response.data.result === true) {
-                const deliveryNumberDtos = response.data.deliveryNumberDtos
-                if (deliveryNumberDtos != null) {
-                    setSelectedDeliveryNumberDto(deliveryNumberDtos[0])
-                } else {
-                    setSelectedDeliveryNumberDto(null)
-                }
-            }
-            setLoadingAlertOpen(false)
-        } catch (error) {
-            setLoadingAlertOpen(false)
-            console.log("requestReviewGetApi error")
-            console.log(error)
-        }
-        setLoadingAlertOpen(false)
     }
 
     return <div className="row h-100 p-3">
