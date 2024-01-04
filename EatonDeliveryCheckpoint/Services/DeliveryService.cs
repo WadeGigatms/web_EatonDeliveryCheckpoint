@@ -195,10 +195,12 @@ namespace EatonDeliveryCheckpoint.Services
                 // Get DeliveryCargoDataDtos of deliveryingCargoDto from database
                 deliveryingNumberDto.datas = _connection.QueryDeliveryNumberDataDtos(deliveryingNumberDto.no);
 
+                /*
                 // Save to cache
                 _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                 List<DeliveryNumberDto> updatedDeliveryCargoDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                 _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryCargoDtos);
+                */
             }
 
             // Data received from epc server
@@ -211,12 +213,14 @@ namespace EatonDeliveryCheckpoint.Services
                 if (matchedMaterialDeliveryNumberDataDto.product_count < matchedMaterialDeliveryNumberDataDto.realtime_product_count + dto.qty)
                 {
                     // [ERROR]
+                    /*
                     // Update deliveryingCargoDto and deliveryCargoDtos in cache
                     UpdateDeliveryNumberDtoWithInvalidPallet(ref deliveryingNumberDto);
                     UpdateDeliveryNumberDataDtoForRealtimeWithInvalidData(ref matchedMaterialDeliveryNumberDataDto, dto.qty);
                     _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                     List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
+                    */
 
                     // Update database
                     DeliveryNumberContext deliveryNumberContext = _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
@@ -236,12 +240,14 @@ namespace EatonDeliveryCheckpoint.Services
                 else
                 {
                     // [OK]
+                    /*
                     // Update deliveryingCargoDto and deliveryCargoDtos in cache
                     UpdateDeliveryNumberDtoWithValidQty(ref deliveryingNumberDto);
                     UpdateDeliveryNumberDataDtoForRealtime(ref matchedMaterialDeliveryNumberDataDto, dto.qty);
                     _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                     List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
+                    */
 
                     // Update database
                     DeliveryNumberContext deliveryNumberContext = _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
@@ -261,13 +267,15 @@ namespace EatonDeliveryCheckpoint.Services
                 // Invalid material
 
                 // [ERROR]
+                /*
                 // Update deliveryingCargoDto and deliveryCargoDtos in cache
                 UpdateDeliveryNumberDtoWithInvalidPallet(ref deliveryingNumberDto);
                 InsertDeliveryNumberDataDtoWithInvalidData(ref deliveryingNumberDto, dto);
                 _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                 List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                 _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
-
+                */
+              
                 // Update database
                 DeliveryNumberContext deliveryNumberContext =  _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
                 UpdateDeliveryNumberContextWithInvalidPallet(ref deliveryNumberContext);
@@ -284,6 +292,9 @@ namespace EatonDeliveryCheckpoint.Services
                 result = _httpClientManager.PostToTriggerTerminalReader();
             }
 
+            // Save to cache
+            _localMemoryCache.RemoveDeliveryingNumberDto();
+            _localMemoryCache.RemoveDeliveryNumberDtos();
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetResultDto(ResultEnum.True, ErrorEnum.None);
@@ -381,27 +392,26 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetResultDto(ResultEnum.False, ErrorEnum.InvalidProperties);
             }
 
-            // Any available deliveryingCargoDto in cache
-            DeliveryNumberDto deliveryingNumberDto = _localMemoryCache.ReadDeliveryingNumberDto();
-            if (deliveryingNumberDto == null && deliveryingNumberDto.no != dto.no)
+            // Get DeliveryingCargoDto from database
+            DeliveryNumberDto deliveryingNumberDto = _connection.QueryDeliveryNumberDtosWithState(DeliveryStateEnum.Alert).FirstOrDefault();
+            if (deliveryingNumberDto == null)
             {
-                // Get DeliveryingCargoDto from database
-                deliveryingNumberDto = _connection.QueryDeliveryNumberDtosWithState(DeliveryStateEnum.Alert).FirstOrDefault();
-                if (deliveryingNumberDto == null)
-                {
-                    // Maybe no dn is selected and some pallet had been moved to terminal
-                    // So return and no update and insert data into database
-                    return GetResultDto(ResultEnum.True, ErrorEnum.None);
-                }
+                // Maybe no dn is selected and some pallet had been moved to terminal
+                // So return and no update and insert data into database
 
-                // Get DeliveryCargoDataDtos of deliveryingCargoDto from database
-                deliveryingNumberDto.datas = _connection.QueryDeliveryNumberDataDtos(deliveryingNumberDto.no);
+                // Dismiss alert trigger
+                _httpClientManager.PostToDismissTriggerTerminalReader();
 
                 // Save to cache
-                _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
-                List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
-                _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
+                _localMemoryCache.RemoveDeliveryingNumberDto();
+                _localMemoryCache.RemoveDeliveryNumberDtos();
+                _localMemoryCache.SaveCacheDidChange(true);
+
+                return GetResultDto(ResultEnum.True, ErrorEnum.None);
             }
+
+            // Get DeliveryCargoDataDtos of deliveryingCargoDto from database
+            deliveryingNumberDto.datas = _connection.QueryDeliveryNumberDataDtos(deliveryingNumberDto.no);
 
             // Get invalid data from deliveryingCargoDto
             DeliveryNumberDataDto alertDeliveryNumberDataDto = deliveryingNumberDto.datas.Where(data => data.alert == 1).FirstOrDefault();
@@ -413,11 +423,13 @@ namespace EatonDeliveryCheckpoint.Services
                     // Over qty
                     UpdateDeliveryNumberDataDtoToRemoveInvalidQty(ref deliveryingNumberDto, alertDeliveryNumberDataDto);
 
+                    /*
                     // Update deliveryingCargoDto and deliveryCargoDtos in cache
                     UpdateDeliveryNumberDtoWhenDismissAlert(ref deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                     List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
+                    */
 
                     // Update database
                     DeliveryNumberContext deliveryNumberContext = _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
@@ -433,11 +445,13 @@ namespace EatonDeliveryCheckpoint.Services
                     // Miss match material
                     UpdateDeliveryCargoDataDtoToRemoveInvalidMaterial(ref deliveryingNumberDto, alertDeliveryNumberDataDto);
 
+                    /*
                     // Update deliveryingCargoDto and deliveryCargoDtos in cache
                     UpdateDeliveryNumberDtoWhenDismissAlert(ref deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
                     List<DeliveryNumberDto> updatedDeliveryNumberDtos = UpdateCacheDeliveryNumberDtos(deliveryingNumberDto);
                     _localMemoryCache.SaveDeliveryNumberDtos(updatedDeliveryNumberDtos);
+                    */
 
                     // Update database
                     DeliveryNumberContext deliveryNumberContext = _connection.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
@@ -452,6 +466,9 @@ namespace EatonDeliveryCheckpoint.Services
             // Dismiss alert trigger
             _httpClientManager.PostToDismissTriggerTerminalReader();
 
+            // Save to cache
+            _localMemoryCache.RemoveDeliveryingNumberDto();
+            _localMemoryCache.RemoveDeliveryNumberDtos();
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetResultDto(ResultEnum.True, ErrorEnum.None);
@@ -586,6 +603,8 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetResultDto(ResultEnum.False, ErrorEnum.FailedToAccessDatabase);
             }
 
+            _localMemoryCache.RemoveDeliveryingNumberDto();
+            _localMemoryCache.RemoveDeliveryNumberDtos();
             _localMemoryCache.SaveCacheDidChange(true);
 
             return GetResultDto(ResultEnum.True, ErrorEnum.None);
@@ -619,7 +638,7 @@ namespace EatonDeliveryCheckpoint.Services
             List<DeliveryNumberContext> contexts = new List<DeliveryNumberContext>();
             int productCount = dto.FileData.Sum(f => int.Parse(f.Quantity));
             int materialCount = dto.FileData.GroupBy(f => f.Material).Count();
-            int palletCount = dto.FileData.Sum(f => (int)Math.Ceiling(decimal.ToDouble(int.Parse(f.Quantity)) / decimal.ToDouble(int.Parse(f.Unit))));
+            int palletCount = dto.FileData.Sum(f => int.Parse(f.Unit));
             return new DeliveryNumberContext
             {
                 f_delivery_file_id = id,
