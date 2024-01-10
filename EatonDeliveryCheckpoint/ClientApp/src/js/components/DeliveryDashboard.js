@@ -185,8 +185,8 @@ const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, 
                         setValidDatas(selectedDeliveryNumberDto.datas)
                         setInvalidDatas(null)
 
-                        const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.delivery === "-" && data.alert === 1)
-                        const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert === 1)
+                        const invalidMaterialDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count === -1 && data.delivery === "-" && data.alert > 0)
+                        const invalidQtyDataDto = selectedDeliveryNumberDto.datas.find((data) => data.product_count < data.realtime_product_count && data.alert > 0)
                         if (invalidMaterialDataDto) {
                             setInvalidMaterialAlertOpen(true)
                         } else if (invalidQtyDataDto) {
@@ -200,7 +200,7 @@ const DeliveryDashboard = ({ deliveryStep, setDeliveryStep, deliveryNumberDtos, 
                     if (selectedDeliveryNumberDto.state === "finish") {
                         // Set valid datas and invalid datas in CargoDataContent
                         const validDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count > -1 && data.delivery !== "-" && data.alert === 0)
-                        const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert === 1)
+                        const invalidDatas = selectedDeliveryNumberDto.datas.filter((data) => data.product_count === -1 || data.delivery === "-" || data.alert > 0)
                         setValidDatas(validDatas)
                         setInvalidDatas(invalidDatas)
                     }

@@ -3,6 +3,7 @@ using EatonDeliveryCheckpoint.Dtos;
 using EatonDeliveryCheckpoint.Enums;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,26 +11,32 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 {
     public class MsSqlConnectionRepository : ConnectionRepositoryBase
     {
+        public IDbTransaction Transaction { private set; get; }
+
         public MsSqlConnectionRepository(string connectionString) : base(DatabaseConnectionName.MsSql, connectionString)
         {
         }
 
-        #region Query
+        public void SetTransaction(IDbTransaction transaction)
+        {
+            Transaction = transaction;
+        }
 
+        #region Query
 
         public int QueryDeliveryNumberContextCount()
         {
             try
             {
+                List<DeliveryStateEnum> states = new List<DeliveryStateEnum>() { DeliveryStateEnum.New, DeliveryStateEnum.Delivery, DeliveryStateEnum.Alert };
+                var allStates = states.Select(state => state.ToDescription()).ToList();
                 var sql = @"SELECT 
                             COUNT(id) 
                             FROM [scannel].[dbo].[eaton_delivery_number] 
-                            WHERE state = @state_new OR state = @state_delivery OR state = @state_alert ";
-                return _connection.Query<int>(sql, new
+                            WHERE state IN @states ";
+                return _constantConnection.Query<int>(sql, new
                 {
-                    state_new = DeliveryStateEnum.New.ToDescription(),
-                    state_delivery = DeliveryStateEnum.Delivery.ToDescription(),
-                    state_alert = DeliveryStateEnum.Alert.ToDescription(),
+                    states = allStates,
                 }).FirstOrDefault();
             }
             catch (Exception exp)
@@ -42,6 +49,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         {
             try
             {
+                List<DeliveryStateEnum> states = new List<DeliveryStateEnum>() { DeliveryStateEnum.New, DeliveryStateEnum.Delivery, DeliveryStateEnum.Alert };
+                var allStates = states.Select(state => state.ToDescription()).ToList();
                 var sql = @"SELECT 
                             f.name AS file_name, 
                             f.upload_timestamp, 
@@ -58,14 +67,12 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                             FROM [scannel].[dbo].[eaton_delivery_file] AS f 
                             INNER JOIN [scannel].[dbo].[eaton_delivery_number] AS n 
                             ON f.id=n.f_delivery_file_id 
-                            WHERE n.state = @state_new OR n.state = @state_delivery OR n.state = @state_alert 
+                            WHERE n.state IN @states  
                             ORDER BY f.upload_timestamp DESC ";
-                return _connection.Query<DeliveryNumberDto>(sql, new
+                return _constantConnection.Query<DeliveryNumberDto>(sql, new
                 {
-                    state_new = DeliveryStateEnum.New.ToDescription(),
-                    state_delivery = DeliveryStateEnum.Delivery.ToDescription(),
-                    state_alert = DeliveryStateEnum.Alert.ToDescription(),
-                }).ToList();
+                    states = allStates,
+                }, Transaction).ToList();
             }
             catch (Exception exp)
             {
@@ -89,7 +96,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                 INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
                                 ON n.id=i.f_delivery_number_id 
                                 WHERE n.no=@no ";
-                List<DeliveryNumberDataDto> dataDtos = _connection.Query<DeliveryNumberDataDto>(dataSql, new
+                List<DeliveryNumberDataDto> dataDtos = _constantConnection.Query<DeliveryNumberDataDto>(dataSql, new
                 {
                     no = no,
                 }).ToList();
@@ -103,9 +110,9 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                     d.pn, 
                                     d.line, 
                                     d.pallet_id 
-                                    FROM [scannel].[dbo].[eaton_delivery_number] AS n
+                                    FROM [scannel].[dbo].[eaton_delivery_number] AS n 
                                     INNER JOIN [scannel].[dbo].[eaton_cargo_data_info] AS i 
-                                    ON n.id=i.f_delivery_number_id AND i.material IN @materials
+                                    ON n.id=i.f_delivery_number_id AND i.material IN @materials 
                                     INNER JOIN [scannel].[dbo].[eaton_cargo_data_record] AS r 
                                     ON i.id=r.f_cargo_data_info_id 
                                     INNER JOIN [scannel].[dbo].[eaton_epc_data] AS d 
@@ -114,7 +121,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                                     ON w.id=r.f_epc_raw_id 
                                     WHERE n.no=@no 
                                     ORDER BY w.timestamp ";
-                List<DeliveryNumberDataRecordDto> recordDtos = _connection.Query<DeliveryNumberDataRecordDto>(recordSql, new
+                List<DeliveryNumberDataRecordDto> recordDtos = _constantConnection.Query<DeliveryNumberDataRecordDto>(recordSql, new
                 {
                     no = no,
                     materials = materials
@@ -124,6 +131,24 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     data.records = recordDtos.Where(d => d.pn == data.material).ToList();
                 }
                 return dataDtos;
+            }
+            catch (Exception exp)
+            {
+                return null;
+            }
+        }
+
+        public DeliveryNumberContext QueryDeliveryNumberContextWithStates(List<DeliveryStateEnum> states)
+        {
+            try
+            {
+                var allStates = states.Select(state => state.ToDescription()).ToList();
+                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_delivery_number] 
+                            WHERE state IN @states ";
+                return _connection.Query<DeliveryNumberContext>(sql, new
+                {
+                    states = allStates,
+                }, Transaction).ToList().FirstOrDefault();
             }
             catch (Exception exp)
             {
@@ -149,7 +174,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryFileContext>(sql, new
                 {
                     deliverys = deliverys,
-                }).ToList();
+                }, Transaction).ToList();
             }
             catch (Exception exp)
             {
@@ -166,7 +191,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryFileContext>(sql, new
                 {
                     name = name,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -183,7 +208,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberContext>(sql, new
                 {
                     id = id,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -200,7 +225,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<CargoDataContext>(sql, new
                 {
                     ids = ids,
-                }).ToList();
+                }, Transaction).ToList();
             }
             catch
             {
@@ -217,7 +242,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<CargoDataInfoContext>(sql, new
                 {
                     ids = ids,
-                }).ToList();
+                }, Transaction).ToList();
             }
             catch
             {
@@ -225,16 +250,17 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
             }
         }
 
-        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(DeliveryStateEnum state)
+        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithStates(List<DeliveryStateEnum> states)
         {
             try
             {
+                var allStates = states.Select(state => state.ToDescription()).ToList();
                 var sql = @"SELECT * FROM [scannel].[dbo].[eaton_delivery_number] 
-                            WHERE state=@state ";
+                            WHERE state IN @states ";
                 return _connection.Query<DeliveryNumberDto>(sql, new
                 {
-                    state = state.ToDescription(),
-                }).ToList();
+                    states = allStates,
+                }, Transaction).ToList();
             }
             catch
             {
@@ -252,7 +278,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 {
                     f_delivery_number_id = f_delivery_number_id,
                     material = material,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch (Exception exp)
             {
@@ -271,7 +297,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     material = context.material,
                     product_count = context.product_count,
                     alert = context.alert,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -288,7 +314,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberContext>(sql, new
                 {
                     no = no,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -312,7 +338,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     f_delivery_number_id = f_delivery_number_id,
                     f_cargo_data_info_id = f_cargo_data_info_id,
                     valid = 0,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -346,7 +372,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberDto>(sql, new
                 {
                     delivery = delivery,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch
             {
@@ -380,7 +406,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Query<DeliveryNumberDto>(sql, new
                 {
                     no = no,
-                }).FirstOrDefault();
+                }, Transaction).FirstOrDefault();
             }
             catch (Exception exp)
             {
@@ -408,7 +434,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 {
                     no = no,
                     product_count = -1,
-                }).ToList();
+                }, Transaction).ToList();
             }
             catch
             {
@@ -440,9 +466,26 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 {
                     no = no,
                     valid = 0,
-                }).ToList();
+                }, Transaction).ToList();
             }
             catch
+            {
+                return null;
+            }
+        }
+
+        public List<CargoDataInfoContext> QueryCargoDataInfoContextsWithDeliveryNumberId(int f_delivery_number_id)
+        {
+            try
+            {
+                var sql = @"SELECT * FROM [scannel].[dbo].[eaton_cargo_data_info] 
+                            WHERE f_delivery_number_id=@f_delivery_number_id ";
+                return _connection.Query<CargoDataInfoContext>(sql, new
+                {
+                    f_delivery_number_id = f_delivery_number_id,
+                }, Transaction).ToList();
+            }
+            catch (Exception exp)
             {
                 return null;
             }
@@ -463,7 +506,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     name = context.name,
                     upload_timestamp = context.upload_timestamp,
                     json = context.json,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch
             {
@@ -512,7 +555,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     valid_pallet_quantity = context.valid_pallet_quantity,
                     invalid_pallet_quantity = context.invalid_pallet_quantity,
                     state = context.state
-                }) > 0;
+                }, Transaction) > 0;
                 return true;
             }
             catch (Exception exp)
@@ -549,7 +592,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                         material = context.material,
                         quantity = context.quantity,
                         unit = context.unit,
-                    }) > 0;
+                    }, Transaction) > 0;
                     if (!result) { return false; }
                 }
                 return true;
@@ -594,7 +637,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                         realtime_product_count = context.realtime_product_count,
                         realtime_pallet_count = context.realtime_pallet_count,
                         alert = context.alert,
-                    }) > 0;
+                    }, Transaction) > 0;
                     if (!result) { return false; }
                 }
                 return true;
@@ -637,7 +680,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     realtime_product_count = context.realtime_product_count,
                     realtime_pallet_count = context.realtime_pallet_count,
                     alert = context.alert,
-                }) > 0;
+                }, Transaction) > 0;
                 return result;
             }
             catch (Exception exp)
@@ -669,7 +712,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     f_epc_raw_id = context.f_epc_raw_id,
                     f_epc_data_id = context.f_epc_data_id,
                     valid = context.valid,
-                }) > 0;
+                }, Transaction) > 0;
                 return result;
             }
             catch (Exception exp)
@@ -694,7 +737,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     start_time = dto.start_time,
                     state = dto.state,
                     no = dto.no,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -715,7 +758,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     miss_pallet_quantity = dto.miss_pallet_quantity,
                     state = dto.state,
                     no = dto.no,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -734,7 +777,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 {
                     state = dto.state,
                     no = dto.no,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -756,7 +799,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     invalid_pallet_quantity = context.invalid_pallet_quantity,
                     miss_pallet_quantity = context.miss_pallet_quantity,
                     state = context.state,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -774,8 +817,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 return _connection.Execute(sql, new
                 {
                     id = context.id,
-                    state = context.state,
-                }) > 0;
+                    state = DeliveryStateEnum.Delivery.ToDescription(),
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -796,7 +839,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                     realtime_product_count = context.realtime_product_count,
                     realtime_pallet_count = context.realtime_pallet_count,
                     alert = context.alert,
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {
@@ -815,7 +858,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 {
                     no = no,
                     state_disable = DeliveryStateEnum.Disable.ToDescription(),
-                }) > 0;
+                }, Transaction) > 0;
             }
             catch (Exception exp)
             {

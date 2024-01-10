@@ -20,51 +20,55 @@ namespace EatonDeliveryCheckpoint.HttpClients
 
         public bool PostToTriggerTerminalReader()
         {
-            try
+            using (var httpClient = _httpClientFactory.CreateClient())
             {
-                var httpClient = _httpClientFactory.CreateClient();
-                //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                var dto = new TerminalReaderTriggerDto
+                try
                 {
-                    DODurationTime = "15",
-                    DOPortList = new string[] { "1", "2", "4" },
-                };
-                var json = JsonConvert.SerializeObject(dto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
-                return true;
-            } 
-            catch (Exception exp)
-            {
-                return false;
+                    //httpClient.BaseAddress = new Uri("http://localhost/"); // test
+                    //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                    httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                    var dto = new TerminalReaderTriggerDto
+                    {
+                        DODurationTime = "15",
+                        DOPortList = new string[] { "1", "2", "4" },
+                    };
+                    var json = JsonConvert.SerializeObject(dto);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    return true;
+                }
+                catch (Exception exp)
+                {
+                    return false;
+                }
             }
         }
 
         public bool PostToDismissTriggerTerminalReader()
         {
-            try
+            using (var httpClient = _httpClientFactory.CreateClient())
             {
-                var httpClient = _httpClientFactory.CreateClient();
-                //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
-                httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-                var dto = new TerminalReaderTriggerDto
+                try
                 {
-                    DODurationTime = "0",
-                    DOPortList = new string[] { "1", "2", "4" },
-                };
-                var json = JsonConvert.SerializeObject(dto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
-                return true;
-            }
-            catch (Exception exp)
-            {
-                return false;
+                    //httpClient.BaseAddress = new Uri("http://localhost/"); // test
+                    //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                    httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                    var dto = new TerminalReaderTriggerDto
+                    {
+                        DODurationTime = "0",
+                        DOPortList = new string[] { "1", "2", "4" },
+                    };
+                    var json = JsonConvert.SerializeObject(dto);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    return true;
+                }
+                catch (Exception exp)
+                {
+                    return false;
+                }
             }
         }
     }

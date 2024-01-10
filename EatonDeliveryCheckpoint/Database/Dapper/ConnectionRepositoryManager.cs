@@ -2,6 +2,7 @@
 using EatonDeliveryCheckpoint.Enums;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -43,8 +44,8 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
         public List<CargoDataInfoContext> QueryCargoDataInfoContexts(List<int> ids)
             => MsSqlConnectionRepository.QueryCargoDataInfoContexts(ids);
 
-        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithState(DeliveryStateEnum state)
-            => MsSqlConnectionRepository.QueryDeliveryNumberDtosWithState(state);
+        public List<DeliveryNumberDto> QueryDeliveryNumberDtosWithStates(List<DeliveryStateEnum> states)
+            => MsSqlConnectionRepository.QueryDeliveryNumberDtosWithStates(states);
 
         public CargoDataInfoContext QueryCargoDataInfoContextWithMaterial(int cargo_id, string material)
             => MsSqlConnectionRepository.QueryCargoDataInfoContextWithMaterial(cargo_id, material);
@@ -69,6 +70,12 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         public List<DeliveryNumberDataDto> QueryInvalidDeliveryNumberDataDtos(string no)
             => MsSqlConnectionRepository.QueryInvalidDeliveryNumberDataDtos(no);
+
+        public List<CargoDataInfoContext> QueryCargoDataInfoContextsWithDeliveryNumberId(int f_delivery_number_id)
+            => MsSqlConnectionRepository.QueryCargoDataInfoContextsWithDeliveryNumberId(f_delivery_number_id);
+
+        public DeliveryNumberContext QueryDeliveryNumberContextWithStates(List<DeliveryStateEnum> states)
+            => MsSqlConnectionRepository.QueryDeliveryNumberContextWithStates(states);
 
         #endregion
 
@@ -101,9 +108,6 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
 
         public bool UpdateDeliveryNumberContextWhenFinish(DeliveryNumberDto dto)
             => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenFinish(dto);
-
-        public bool UpdateDeliveryNumberContextWhenDone(DeliveryNumberDto dto)
-            => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenDone(dto);
 
         public bool UpdateDeliveryNumberContextWhenDataInserted(DeliveryNumberContext context)
             => MsSqlConnectionRepository.UpdateDeliveryNumberContextWhenDataInserted(context);
