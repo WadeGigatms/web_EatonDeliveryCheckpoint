@@ -32,66 +32,85 @@ namespace EatonDeliveryCheckpoint.Services
 
         public IResultDto GetDnList()
         {
-            try
+            using (var connection = _manager.MsSqlConnectionRepository.InitConnection())
             {
-                // Examine for any changes
-                List<DeliveryNumberDto> cacheDeliveryNumberDtos = _localMemoryCache.ReadDeliveryNumberDtos();
-                DeliveryNumberDto cacheDeliveryingNumberDto = _localMemoryCache.ReadDeliveryingNumberDto();
-                bool cacheDidChange = _localMemoryCache.ReadCacheDidChange();
-                int databaseDeliveryNumberCount = _manager.QueryDeliveryNumberContextCount();
-                if (cacheDeliveryingNumberDto == null)
+                connection.Open();
+
+                using (var transaction = _manager.MsSqlConnectionRepository.BeginTransaction())
                 {
-                    if (cacheDeliveryNumberDtos != null && cacheDidChange == false)
+                    try
                     {
-                        if (cacheDeliveryNumberDtos.Count() == databaseDeliveryNumberCount)
+                        // Examine for any changes
+                        List<DeliveryNumberDto> cacheDeliveryNumberDtos = _localMemoryCache.ReadDeliveryNumberDtos();
+                        DeliveryNumberDto cacheDeliveryingNumberDto = _localMemoryCache.ReadDeliveryingNumberDto();
+                        bool cacheDidChange = _localMemoryCache.ReadCacheDidChange();
+                        int databaseDeliveryNumberCount = _manager.QueryDeliveryNumberContextCount();
+                        if (cacheDeliveryingNumberDto == null)
                         {
-                            return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), cacheDeliveryNumberDtos);
+                            if (cacheDeliveryNumberDtos != null && cacheDidChange == false)
+                            {
+                                if (cacheDeliveryNumberDtos.Count() == databaseDeliveryNumberCount)
+                                {
+                                    // Commit the transaction if everything is successful
+                                    transaction.Commit();
+
+                                    return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), cacheDeliveryNumberDtos);
+                                }
+                            }
                         }
-                    }
-                }
 
-                // Query DeliveryCargoDtos which did not finish
-                List<DeliveryNumberDto> deliveryNumberDtos = _manager.QueryDeliveryNumberDtos();
-                if (deliveryNumberDtos == null)
-                {
-                    // No available data in database
-                    return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), null);
-                }
-
-                // Query DeliveryCargoDataDto matches no
-                if (deliveryNumberDtos.Count > 0)
-                {
-                    foreach (var deliveryNumberDto in deliveryNumberDtos)
-                    {
-                        List<DeliveryNumberDataDto> deliveryNumberDataDtos = _manager.QueryDeliveryNumberDataDtos(deliveryNumberDto.no);
-                        if (deliveryNumberDataDtos == null)
+                        // Query DeliveryCargoDtos which did not finish
+                        List<DeliveryNumberDto> deliveryNumberDtos = _manager.QueryDeliveryNumberDtos();
+                        if (deliveryNumberDtos == null)
                         {
+                            // Commit the transaction if everything is successful
+                            transaction.Commit();
+
                             // No available data in database
-                            throw new Exception(ErrorEnum.NoData.ToChineseDescription());
+                            return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), null);
                         }
-                        deliveryNumberDto.datas = deliveryNumberDataDtos;
+
+                        // Query DeliveryCargoDataDto matches no
+                        if (deliveryNumberDtos.Count > 0)
+                        {
+                            foreach (var deliveryNumberDto in deliveryNumberDtos)
+                            {
+                                List<DeliveryNumberDataDto> deliveryNumberDataDtos = _manager.QueryDeliveryNumberDataDtos(deliveryNumberDto.no);
+                                if (deliveryNumberDataDtos == null)
+                                {
+                                    // No available data in database
+                                    throw new Exception(ErrorEnum.NoData.ToChineseDescription());
+                                }
+                                deliveryNumberDto.datas = deliveryNumberDataDtos;
+                            }
+                        }
+
+                        // Update cache
+                        // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
+                        DeliveryNumberDto deliveryingNumberDto = deliveryNumberDtos.Where(dto => dto.state == DeliveryStateEnum.Delivery.ToDescription() || dto.state == DeliveryStateEnum.Alert.ToDescription()).FirstOrDefault();
+                        if (deliveryingNumberDto != null)
+                        {
+                            _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
+                        }
+                        else
+                        {
+                            _localMemoryCache.RemoveDeliveryingNumberDto();
+                        }
+                        _localMemoryCache.SaveDeliveryNumberDtos(deliveryNumberDtos);
+                        _localMemoryCache.SaveCacheDidChange(false);
+
+                        // Commit the transaction if everything is successful
+                        transaction.Commit();
+
+                        return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), deliveryNumberDtos);
+                    }
+                    catch (Exception exp)
+                    {
+                        // Handle exceptions and optionally roll back the transaction
+                        transaction.Rollback();
+                        return GetResultDto(ResultEnum.False, exp.Message);
                     }
                 }
-
-                // Update cache
-                // 0: new, 1: select, 2: deliverying, 3: finish/search/review, 4: edit, -1: alert/pause
-                DeliveryNumberDto deliveryingNumberDto = deliveryNumberDtos.Where(dto => dto.state == DeliveryStateEnum.Delivery.ToDescription() || dto.state == DeliveryStateEnum.Alert.ToDescription()).FirstOrDefault();
-                if (deliveryingNumberDto != null)
-                {
-                    _localMemoryCache.SaveDeliveryingNumberDto(deliveryingNumberDto);
-                }
-                else
-                {
-                    _localMemoryCache.RemoveDeliveryingNumberDto();
-                }
-                _localMemoryCache.SaveDeliveryNumberDtos(deliveryNumberDtos);
-                _localMemoryCache.SaveCacheDidChange(false);
-
-                return GetDeliveryNumberResultDto(ResultEnum.True, ErrorEnum.None.ToChineseDescription(), deliveryNumberDtos);
-            }
-            catch (Exception exp)
-            {
-                return GetResultDto(ResultEnum.False, exp.Message);
             }
         }
 
@@ -111,9 +130,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         DeliveryNumberDto deliveryNumberDto = _manager.QueryDeliveryNumberDtoWithDelivery(delivery);
                         if (deliveryNumberDto == null)
                         {
@@ -171,9 +187,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         DeliveryNumberDto deliveryNumberDto = _manager.QueryDeliveryNumberDtoWithNo(no);
                         if (deliveryNumberDto == null)
                         {
@@ -243,9 +256,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         // Called by epc server when epc server is called from teminal reader
                         // Get deliveryingNumberContext in database
                         List<DeliveryStateEnum> states = new List<DeliveryStateEnum>() { DeliveryStateEnum.Delivery, DeliveryStateEnum.Alert };
@@ -279,11 +289,9 @@ namespace EatonDeliveryCheckpoint.Services
                                 // Above the target number [ERROR] 
 
                                 // Update database
-                               // DeliveryNumberContext deliveryNumberContext = _manager.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
                                 UpdateDeliveryNumberContextWithInvalidPallet(ref deliveryingNumberContext);
                                 result = _manager.UpdateDeliveryNumberContextWhenDataInserted(deliveryingNumberContext);
 
-                                //CargoDataInfoContext cargoDataInfoContext = _manager.QueryCargoDataInfoContextWithMaterial(deliveryNumberContext.id, dto.pn);
                                 UpdateCargoDataInfoContextForRealtimeWithInvalidData(ref matchedCargoDataInfoContext, dto.qty);
                                 result = _manager.UpdateCargoDataInfoContext(matchedCargoDataInfoContext);
 
@@ -298,12 +306,10 @@ namespace EatonDeliveryCheckpoint.Services
                                 // [OK]
 
                                 // Update database
-                                //DeliveryNumberContext deliveryNumberContext = _manager.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
                                 int alertNumber = cargoDataInfoContexts.Where(context => context.alert > 0).ToList().Count();
                                 UpdateDeliveryNumberContextWithValidQty(ref deliveryingNumberContext, alertNumber);
                                 result = _manager.UpdateDeliveryNumberContextWhenDataInserted(deliveryingNumberContext);
 
-                                //CargoDataInfoContext cargoDataInfoContext = _manager.QueryCargoDataInfoContextWithMaterial(deliveryingNumberContext.id, dto.pn);
                                 UpdateCargoDataInfoContextForRealtime(ref matchedCargoDataInfoContext, dto.qty);
                                 result = _manager.UpdateCargoDataInfoContext(matchedCargoDataInfoContext);
 
@@ -316,7 +322,6 @@ namespace EatonDeliveryCheckpoint.Services
                             // Invalid material [ERROR]
 
                             // Update database
-                            //DeliveryNumberContext deliveryNumberContext = _manager.QueryDeliveryNumberContextWithNo(deliveryingNumberDto.no);
                             UpdateDeliveryNumberContextWithInvalidPallet(ref deliveryingNumberContext);
                             result = _manager.UpdateDeliveryNumberContextWhenDataInserted(deliveryingNumberContext);
 
@@ -379,9 +384,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         // Update [eaton_delivery_number] in database
                         UpdateDeliveryNumberDtoWhenStart(ref dto);
                         result = _manager.UpdateDeliveryNumberContextWhenStart(dto);
@@ -438,9 +440,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         // Update [eaton_delivery_number] in database
                         UpdateDeliveryNumberDtoWhenFinish(ref dto);
                         result = _manager.UpdateDeliveryNumberContextWhenFinish(dto);
@@ -497,9 +496,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         // Get DeliveryingNumberContext from databse
                         DeliveryNumberContext deliveryingNumberContext = _manager.QueryDeliveryNumberContextWithNo(dto.no);
                         if (deliveryingNumberContext == null)
@@ -608,9 +604,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         bool result = _manager.UpdateToDisableDeliveryNumberState(dto.no);
                         if (result == false)
                         {
@@ -665,9 +658,6 @@ namespace EatonDeliveryCheckpoint.Services
                 {
                     try
                     {
-                        // Set transcation
-                        _manager.MsSqlConnectionRepository.SetTransaction(transaction);
-
                         // Check for duplicated file
                         DeliveryFileContext existDeliveryFileContext = _manager.QueryDeliveryFileContextWithFileName(dto.FileName);
                         if (existDeliveryFileContext != null)
@@ -940,19 +930,6 @@ namespace EatonDeliveryCheckpoint.Services
             context.realtime_product_count += qty;
             context.realtime_pallet_count += 1;
             context.alert += 1;
-        }
-
-        private void UpdateDeliveryNumberDataDtoToRemoveInvalidQty(ref DeliveryNumberDto deliveryingNumberDto, DeliveryNumberDataDto invalidDataDto)
-        {
-            var data = deliveryingNumberDto.datas.Where(data => data.material == invalidDataDto.material).FirstOrDefault();
-            data.realtime_product_count -= invalidDataDto.realtime_product_count;
-            data.realtime_pallet_count -= invalidDataDto.realtime_pallet_count;
-            data.alert = 0;
-        }
-
-        private void UpdateDeliveryCargoDataDtoToRemoveInvalidMaterial(ref DeliveryNumberDto deliveryingNumberDto, DeliveryNumberDataDto invalidDataDto)
-        {
-            deliveryingNumberDto.datas.Remove(invalidDataDto);
         }
 
         private void UpdateCargoDataInfoContextForRealtimeToRemoveAlert(ref CargoDataInfoContext context)
