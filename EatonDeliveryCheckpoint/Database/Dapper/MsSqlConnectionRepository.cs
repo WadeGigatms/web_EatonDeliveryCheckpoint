@@ -121,7 +121,7 @@ namespace EatonDeliveryCheckpoint.Database.Dapper
                 }, _transaction).ToList();
                 foreach(var data in dataDtos)
                 {
-                    data.records = recordDtos.Where(d => d.pn == data.material).ToList();
+                    data.records = recordDtos.Where(d => d.pn.Contains(data.material)).ToList();
                 }
                 return dataDtos;
             }

@@ -279,7 +279,7 @@ namespace EatonDeliveryCheckpoint.Services
                         }
 
                         // Examine epc for valid or invalid
-                        CargoDataInfoContext matchedCargoDataInfoContext = cargoDataInfoContexts.Where(context => context.material == dto.pn).ToList().FirstOrDefault();
+                        CargoDataInfoContext matchedCargoDataInfoContext = cargoDataInfoContexts.Where(context => dto.pn.Contains(context.material)).ToList().FirstOrDefault();
                         if (matchedCargoDataInfoContext != null)
                         {
                             // Valid material
