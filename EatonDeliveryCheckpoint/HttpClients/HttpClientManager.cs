@@ -25,17 +25,19 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 try
                 {
                     //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                    //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                    //httpClient.BaseAddress = new Uri("http://10.10.10.18:5000/"); // beta
                     httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
                     httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                     var dto = new TerminalReaderTriggerDto
                     {
-                        DODurationTime = "15",
+                        DODurationTime = "10",
                         DOPortList = new string[] { "1", "2", "4" },
                     };
                     var json = JsonConvert.SerializeObject(dto);
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result1 = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result2 = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
                     return true;
                 }
                 catch (Exception exp)
@@ -52,7 +54,7 @@ namespace EatonDeliveryCheckpoint.HttpClients
                 try
                 {
                     //httpClient.BaseAddress = new Uri("http://localhost/"); // test
-                    //httpClient.BaseAddress = new Uri("http://10.10.10.19:5000/"); // beta
+                    //httpClient.BaseAddress = new Uri("http://10.10.10.18:5000/"); // beta
                     httpClient.BaseAddress = new Uri("http://192.168.0.110:5000/"); // standard
                     httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                     var dto = new TerminalReaderTriggerDto
@@ -62,7 +64,9 @@ namespace EatonDeliveryCheckpoint.HttpClients
                     };
                     var json = JsonConvert.SerializeObject(dto);
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result1 = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
+                    var result2 = httpClient.PostAsync("api/DOController", content).ConfigureAwait(false);
                     return true;
                 }
                 catch (Exception exp)
