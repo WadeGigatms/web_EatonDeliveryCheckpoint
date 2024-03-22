@@ -248,6 +248,13 @@ namespace EatonDeliveryCheckpoint.Services
                 return GetResultDto(ResultEnum.False, exp.Message);
             }
 
+            // Test beeper
+            if (dto.pn.Contains("test") || dto.pallet_id.Contains("test"))
+            {
+                result = _httpClientManager.PostToTriggerTerminalReader();
+                return GetResultDto(ResultEnum.True, "Testing");
+            }
+
             using (var connection = _manager.MsSqlConnectionRepository.InitConnection())
             {
                 connection.Open();
