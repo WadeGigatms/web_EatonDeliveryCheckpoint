@@ -53,9 +53,7 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
             const endTime = endMoment.format("HH:mm:ss")
             const duration = moment.duration(endMoment.diff(startMoment))
             const durationTime = String(duration.hours()).padStart(2, "0") + ":" + String(duration.minutes()).padStart(2, "0") + ":" + String(duration.seconds()).padStart(2, "0")
-            const validCount = parseFloat(selectedDeliveryCargoDto.valid_pallet_quantity)
-            const invalidCount = parseFloat(selectedDeliveryCargoDto.invalid_pallet_quantity)
-            const rate = (validCount + invalidCount === 0) ? 0 : Math.round(100 * validCount / (validCount + invalidCount))
+            const rate = Math.round(100 * (selectedDeliveryCargoDto.pallet_quantity - selectedDeliveryCargoDto.miss_pallet_quantity) / selectedDeliveryCargoDto.pallet_quantity)
 
             setNo(selectedDeliveryCargoDto.no)
             setDate(date)
@@ -64,8 +62,8 @@ const CargoDataInfoContent = ({ deliveryStep, selectedDeliveryCargoDto }) => {
             setDuration(durationTime)
             setPalletQuantity(selectedDeliveryCargoDto.pallet_quantity)
             setMissPalletQuantity(selectedDeliveryCargoDto.miss_pallet_quantity)
-            setValidPalletQuantity(validCount)
-            setInvalidPalletQuantity(invalidCount)
+            setValidPalletQuantity(parseFloat(selectedDeliveryCargoDto.valid_pallet_quantity))
+            setInvalidPalletQuantity(parseFloat(selectedDeliveryCargoDto.invalid_pallet_quantity))
             setRate(rate + "%")
         } else if (selectedDeliveryCargoDto === null || selectedDeliveryCargoDto === undefined) {
             setNo("-")
